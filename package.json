@@ -6,10 +6,23 @@
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
-    "elysia": "latest"
+    "@abraham/reflection": "^0.12.0",
+    "@elysiajs/cors": "^0.7.1",
+    "@whatwg-node/server-plugin-cookies": "^1.0.2",
+    "class-transformer": "^0.5.1",
+    "dynamoose": "^3.2.1",
+    "elysia": "latest",
+    "graphql-yoga": "^5.0.0",
+    "jose": "^5.1.0",
+    "tsyringe": "^4.8.0",
+    "type-graphql": "next",
+    "winston": "^3.11.0"
   },
   "devDependencies": {
     "bun-types": "latest"
   },
-  "module": "src/index.js"
+  "module": "src/index.js",
+  "overrides": {
+    "graphql": "16.7.1"
+  }
 }

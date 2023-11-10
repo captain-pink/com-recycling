@@ -40,3 +40,10 @@ yarn-error.log*
 **/*.log
 package-lock.json
 **/*.bun
+
+# Application
+.config/
+public/
+volume/
+.data/
+.dynamodb

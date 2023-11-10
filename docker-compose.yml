@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  dynamodb-local:
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data -cors *"
+    image: "amazon/dynamodb-local:latest"
+    container_name: crm-recycling-dynamodb-local
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./.dynamodb:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
+    environment:
+      - DISABLE_CORS_CHECKS=1
+
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin
+    restart: always
+    ports:
+      - "8001:8001"
+    container_name: crm-recycling-dynamodb-admin
+    environment:
+      DYNAMO_ENDPOINT: "http://dynamodb-local:8000"
+      AWS_REGION: "us-west-2"
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
+    depends_on:
+      - dynamodb-local
