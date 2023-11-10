@@ -8,7 +8,7 @@ import { AuthScope, StoreModelEntryKey } from "../../common/constant";
 import { JwtPayload, ModelStore } from "../../common/model";
 import { GetUsersCondition, UserItem } from "../../db";
 import { ResponseStatus } from "../common/constant";
-import { DBEntityType } from "../../db/dynamo/constant";
+import { DBEntityType, UserType } from "../../db/dynamo/constant";
 import { BaseResponse, BaseSerivce } from "../common/model";
 
 @singleton()
@@ -30,8 +30,8 @@ export class UserService extends BaseSerivce {
       const [userItem] = await this.userModel
         .query(
           new GetUsersCondition({
-            type: DBEntityType.USER,
-            username: input.username,
+            entityType: DBEntityType.USER,
+            email: input.email,
           })
         )
         .exec();
@@ -50,7 +50,7 @@ export class UserService extends BaseSerivce {
       }
 
       const { token, expires } = await this.jwtService.sign(
-        new JwtPayload(input.username, userItem.scopes)
+        new JwtPayload(input.email, userItem.scopes)
       );
 
       cookieStore?.set({
@@ -67,20 +67,26 @@ export class UserService extends BaseSerivce {
   }
 
   async signUp(input: SignUpInput): Promise<BaseResponse> {
-    const { username, password } = input;
+    const { email, password, type } = input;
+    const scope =
+      type === UserType.MANUFACTURER
+        ? AuthScope.WRITE_MANUFACTURER
+        : AuthScope.WRITE_RECYCLER;
 
     try {
       const hash = await this.authService.hashPassword(password);
 
       await this.userModel.create({
-        type: DBEntityType.USER,
-        username: username,
+        entityType: DBEntityType.USER,
+        type,
+        email,
         hash,
-        scopes: [AuthScope.READ],
+        scopes: [scope],
       });
 
       return new BaseResponse(ResponseStatus.OK);
-    } catch {
+    } catch (error) {
+      console.error("Failed to sign up user", error);
       return new BaseResponse(ResponseStatus.FAILED);
     }
   }

@@ -1,12 +1,13 @@
-import { IsStrongPassword, MaxLength, MinLength } from "class-validator";
+import { IsEmail, IsEnum, IsStrongPassword, MaxLength } from "class-validator";
 import { Field, InputType } from "type-graphql";
+
+import { UserType } from "../../../db/dynamo/constant";
 
 @InputType()
 export class SignUpInput {
   @Field()
-  @MinLength(5)
-  @MaxLength(30)
-  readonly username: string;
+  @IsEmail()
+  readonly email: string;
 
   @Field()
   @IsStrongPassword({
@@ -18,4 +19,8 @@ export class SignUpInput {
   })
   @MaxLength(30)
   readonly password: string;
+
+  @Field(() => UserType)
+  @IsEnum(UserType)
+  readonly type: UserType;
 }

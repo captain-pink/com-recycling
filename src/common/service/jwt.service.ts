@@ -27,7 +27,7 @@ export class JwtService {
         alg: "HS256",
         typ: "JWT",
       })
-      .setSubject(payload.username)
+      .setSubject(payload.email)
       .setExpirationTime(this.calculateExp());
 
     return { expires, token: await jwt.sign(this.ENCODED_SECRET) };

@@ -8,7 +8,7 @@ export class AuthFailedError extends ApiError {
   constructor(extensions?: Maybe<GraphQLErrorExtensions>) {
     super(
       ErrorCode.FAILED,
-      "Failed to authorize. Check 'username' or 'password'",
+      "Failed to authorize. Check 'email' or 'password'",
       extensions
     );
   }

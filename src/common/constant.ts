@@ -13,7 +13,8 @@ export enum ConfigEntries {
 
 export enum AuthScope {
   READ,
-  WRITE,
+  WRITE_MANUFACTURER,
+  WRITE_RECYCLER,
 }
 
 export enum AsyncStorageEntries {

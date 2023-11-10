@@ -11,7 +11,7 @@ import { AppContext } from "../../common/type";
 export class UserResolver {
   constructor(private readonly userService: UserService) {}
 
-  @Mutation(() => LoggedIn)
+  @Mutation(() => BaseResponse)
   login(
     @Arg("data") input: LoginInput,
     @Ctx() ctx: Pick<AppContext, "request">

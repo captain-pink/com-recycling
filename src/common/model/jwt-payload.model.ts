@@ -1,12 +1,12 @@
 import { AuthScope } from "../constant";
 
 export class JwtPayload {
-  readonly username: string;
+  readonly email: string;
   readonly scopes: Set<AuthScope>;
   readonly exp?: number;
 
-  constructor(username: string, scopes: Array<AuthScope>, exp?: number) {
-    this.username = username;
+  constructor(email: string, scopes: Array<AuthScope>, exp?: number) {
+    this.email = email;
     this.scopes = new Set(scopes);
     this.exp = exp;
   }

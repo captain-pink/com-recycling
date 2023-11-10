@@ -7,3 +7,8 @@ export enum CompositekeyFilter {
 export enum DBEntityType {
   USER = "USER",
 }
+
+export enum UserType {
+  MANUFACTURER,
+  RECYCLER,
+}

@@ -5,7 +5,7 @@ import { Field, InputType } from "type-graphql";
 export class LoginInput {
   @Field()
   @MaxLength(30)
-  readonly username: string;
+  readonly email: string;
 
   @Field()
   @MaxLength(30)
