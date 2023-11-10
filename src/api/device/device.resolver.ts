@@ -5,7 +5,7 @@ import { singleton } from "tsyringe";
 @Resolver()
 export class DeviceResolver {
   @Query(() => String)
-  login() {
+  queryDeviceData() {
     return "";
   }
 }

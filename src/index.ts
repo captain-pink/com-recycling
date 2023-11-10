@@ -4,6 +4,7 @@ import { createYoga } from "graphql-yoga";
 import { buildSchema } from "type-graphql";
 import { aws } from "dynamoose";
 import { useCookies } from "@whatwg-node/server-plugin-cookies";
+import { useGraphQlJit } from "@envelop/graphql-jit";
 
 import {
   ErrorInterceptor,
@@ -29,7 +30,7 @@ async function bootstrap() {
   const yoga = createYoga({
     schema,
     cors: false,
-    plugins: [useCookies()],
+    plugins: [useCookies(), useGraphQlJit()],
   });
 
   return new Elysia()
