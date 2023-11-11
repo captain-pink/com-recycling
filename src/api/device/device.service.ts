@@ -50,9 +50,7 @@ export class DeviceService extends BaseSerivce {
       await this.deviceCategoryModel.create({
         manufacturerId,
         category,
-        components: components.map<ComponentItem>((component: Component) =>
-          instanceToInstance(component)
-        ),
+        components: instanceToPlain(components) as Array<ComponentItem>
       });
     });
   }
@@ -141,7 +139,7 @@ export class DeviceService extends BaseSerivce {
     });
   }
 
-  async getDeviceStats(): Promise<ManufacturerStats> {
+  async queryDeviceStats(): Promise<ManufacturerStats> {
     const { id: manufacturerId } = this.asyncStorageService.get(
       AsyncStorageEntries.JWT_PAYLOAD
     ) as JwtPayload;
@@ -154,7 +152,7 @@ export class DeviceService extends BaseSerivce {
     return plainToInstance(ManufacturerStats, stats.toJSON());
   }
 
-  async getDevices() {
+  async queryDevices() {
     const { id: manufacturerId } = this.asyncStorageService.get(
       AsyncStorageEntries.JWT_PAYLOAD
     ) as JwtPayload;
