@@ -13,7 +13,7 @@ import {
 import { AsyncStorageEntries, StoreModelEntryKey } from "../../common/constant";
 import { asBatch } from "../../api/common/helper";
 import { BaseSerivce, ApiError } from "../common/model";
-import { Device, ManufacturerStats, QueryDeviceInfoArgs } from "./model";
+import { Device, DeviceCategory, ManufacturerStats, QueryDeviceInfoArgs } from "./model";
 import { ErrorCode } from "../common/constant";
 import { DeviceInput } from "./model/create-devices-args.model";
 import { Component } from "./model/device.model";
@@ -47,15 +47,17 @@ export class DeviceService extends BaseSerivce {
     ) as JwtPayload;
 
     return this.replyWithBaseResponse(async () => {
+      console.log(DBEntityType.CATEGORY);
+      console.log(`${DBEntityType.CATEGORY}_${category}`);
       await this.deviceCategoryModel.create({
         manufacturerId,
-        category,
+        category: `${DBEntityType.CATEGORY}_${category}`,
         components: instanceToPlain(components) as Array<ComponentItem>
       });
     });
   }
 
-  async queryDeviceCategories() {
+  async queryDeviceCategories(): Promise<Array<DeviceCategory>> {
     const { id: manufacturerId } = this.asyncStorageService.get(
       AsyncStorageEntries.JWT_PAYLOAD
     ) as JwtPayload;
@@ -67,8 +69,13 @@ export class DeviceService extends BaseSerivce {
         })
       )
       .exec();
-
-    return categories;
+    return categories.map(deviceCategory => {
+        return {
+          manufacturerId: deviceCategory.manufacturerId,
+          category: deviceCategory.category.split('_')[1],
+          components: plainToInstance(ComponentItem, deviceCategory.components),
+        };
+      });
   }
 
   async queryDeviceInfo(input: QueryDeviceInfoArgs) {
@@ -99,8 +106,8 @@ export class DeviceService extends BaseSerivce {
 
     return {
       manufacturerId: deviceItem.manufacturerId,
-      serialNumber: deviceItem.serialNumber,
-      category: deviceItem.category,
+      serialNumber: deviceItem.serialNumber.split('_')[1],
+      category: deviceItem.category.split('_')[1],
       components: category.components,
       isRecycled: deviceItem.isRecycled,
     };
@@ -115,8 +122,8 @@ export class DeviceService extends BaseSerivce {
     const items = devices.map((device: DeviceInput) => {
       return {
         manufacturerId,
-        serialNumber: device.serialNumber,
-        category: device.category,
+        serialNumber: `${DBEntityType.SERIAL_NUMBER}_${device.serialNumber}`,
+        category: `${DBEntityType.CATEGORY}_${device.category}`,
         isRecycled: false,
       };
     });
@@ -161,6 +168,13 @@ export class DeviceService extends BaseSerivce {
       .query(new GetDevicesCondition({ manufacturerId }))
       .exec();
 
-    return deviceItems.map((item: DeviceItem) => plainToInstance(Device, item));
+    return deviceItems.map((item: DeviceItem) => {
+      return {
+        manufacturerId: item.manufacturerId,
+        serialNumber: item.serialNumber.split('_')[1],
+        category: item.category.split('_')[1],
+        isRecycled: item.isRecycled
+      };
+    });
   }
 }

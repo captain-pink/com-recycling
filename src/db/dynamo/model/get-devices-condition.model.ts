@@ -2,7 +2,7 @@ import { Condition } from "dynamoose";
 
 import { DeviceItem } from "..";
 import { InternalServerError } from "../../../api/common/model";
-import { CompositekeyFilter } from "../constant";
+import { CompositekeyFilter, DBEntityType } from "../constant";
 
 export class GetDevicesCondition extends Condition {
   constructor(
@@ -18,6 +18,7 @@ export class GetDevicesCondition extends Condition {
     }
 
     this.where("manufacturerId").eq(manufacturerId);
+    this.and().where("serialNumber")[CompositekeyFilter.BEGINS_WITH](DBEntityType.SERIAL_NUMBER);
 
     if (serialNumber) {
       this.and().where("serialNumber")[type](serialNumber);

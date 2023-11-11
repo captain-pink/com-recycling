@@ -7,6 +7,7 @@ import {
   CreateDevicesArgs,
   CreateDeviceCategoryArgs,
   Device,
+  DeviceCategory,
   ManufacturerStats,
 } from "./model";
 import { BaseResponse } from "../common/model";
@@ -51,7 +52,7 @@ export class DeviceResolver {
   }
 
   @Authorized(AuthScope.WRITE_MANUFACTURER)
-  @Query(() => Device)
+  @Query(() => [DeviceCategory])
   queryDeviceCategories() {
     return this.deviceService.queryDeviceCategories();
   }
