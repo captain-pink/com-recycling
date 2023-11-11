@@ -8,7 +8,7 @@ export enum DBEntityType {
   USER = "USER",
   STATS = "STATS",
   CATEGORY = "CATEGORY",
-  SERIAL_NUMBER = "SERIAL_NUMBER",
+  SERIAL_NUMBER = "SERIALNUMBER",
 }
 
 export enum UserType {
