@@ -6,6 +6,7 @@ export enum CompositekeyFilter {
 
 export enum DBEntityType {
   USER = "USER",
+  STATS = "STATS",
 }
 
 export enum UserType {

@@ -1,9 +1,22 @@
-import { Arg, Args, Authorized, Ctx, Mutation, Query, Resolver } from "type-graphql";
+import {
+  Arg,
+  Args,
+  Authorized,
+  Ctx,
+  Mutation,
+  Query,
+  Resolver,
+} from "type-graphql";
 import { singleton } from "tsyringe";
 
 import { DeviceService } from "./device.service";
 import { AuthScope } from "../../common/constant";
-import { CreateDevicesArgs, Device, GetDeviceInfoArgs } from "./model";
+import {
+  CreateDevicesArgs,
+  Device,
+  GetDeviceInfoArgs,
+  ManufacturerStats,
+} from "./model";
 import { BaseResponse } from "../common/model";
 
 @singleton()
@@ -12,15 +25,20 @@ export class DeviceResolver {
   constructor(private readonly deviceService: DeviceService) {}
 
   @Query(() => Device)
-  getDeviceInfo(
-    @Args() args: GetDeviceInfoArgs) {
+  getDeviceInfo(@Args() args: GetDeviceInfoArgs) {
     return this.deviceService.getDeviceInfo(args);
+  }
+
+  @Authorized(AuthScope.WRITE_MANUFACTURER)
+  @Query(() => ManufacturerStats)
+  queryManufacturerStats() {
+    return this.deviceService.getDeviceStats();
   }
 
   @Authorized(AuthScope.WRITE_MANUFACTURER)
   @Mutation(() => BaseResponse)
   createDevicesBatch(
-    @Args() { manufacturerId, devices } : CreateDevicesArgs
+    @Args() { manufacturerId, devices }: CreateDevicesArgs
   ): Promise<BaseResponse> {
     return this.deviceService.createDevicesBatch(manufacturerId, devices);
   }

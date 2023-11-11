@@ -1,27 +1,32 @@
-import { ResolverData } from "type-graphql";
 import { singleton } from "tsyringe";
 import { ModelType } from "dynamoose/dist/General";
 
-import { ModelStore } from "../../common/model";
+import { JwtPayload, ModelStore } from "../../common/model";
 import { GetDevicesCondition, DeviceItem } from "../../db";
-import { AuthScope, StoreModelEntryKey } from "../../common/constant";
-import { AppContext } from "../../common/type";
+import { AsyncStorageEntries, StoreModelEntryKey } from "../../common/constant";
 import { asBatch } from "../../api/common/helper";
-import { BaseResponse, BaseSerivce, ApiError } from "../common/model";
-import { Device, GetDeviceInfoArgs } from "./model";
+import { BaseSerivce, ApiError } from "../common/model";
+import { GetDeviceInfoArgs, ManufacturerStats } from "./model";
 import { ErrorCode } from "../common/constant";
 import { DeviceInput } from "./model/create-devices-args.model";
+import { AsyncStorageService } from "../../common/service";
+import { StatsItem } from "../../db/dynamo/model/stats.model";
+import { DBEntityType } from "../../db/dynamo/constant";
+import { plainToInstance } from "class-transformer";
 
 @singleton()
 export class DeviceService extends BaseSerivce {
   private readonly deviceModel: ModelType<DeviceItem>;
+  private readonly statsModel: ModelType<StatsItem>;
 
   constructor(
-    private readonly modelStore: ModelStore
+    private readonly modelStore: ModelStore,
+    private readonly asyncStorageService: AsyncStorageService
   ) {
     super();
 
     this.deviceModel = this.modelStore.get(StoreModelEntryKey.DEVICE);
+    this.statsModel = this.modelStore.get(StoreModelEntryKey.STATS);
   }
 
   async getDeviceInfo(input: GetDeviceInfoArgs) {
@@ -33,18 +38,27 @@ export class DeviceService extends BaseSerivce {
         })
       )
       .exec();
+
     if (!deviceItem) {
-      throw new ApiError(ErrorCode.NOT_FOUND, "The device is not registered in the system");
+      throw new ApiError(
+        ErrorCode.NOT_FOUND,
+        "The device is not registered in the system"
+      );
     }
+
     return deviceItem;
   }
 
-  async createDevicesBatch(manufacturerId: string, devices: Array<DeviceInput>) {
+  // TODO: To add error handling for unprocessed items
+  async createDevicesBatch(
+    manufacturerId: string,
+    devices: Array<DeviceInput>
+  ) {
     const items = devices.map((device: DeviceInput) => {
       return {
         manufacturerId,
         serialNumber: device.serialNumber,
-        components: device.components
+        components: device.components,
       };
     });
 
@@ -52,6 +66,34 @@ export class DeviceService extends BaseSerivce {
       for (const batch of asBatch(items)) {
         await this.deviceModel.batchPut(batch);
       }
+
+      const { id: manufacturerId } = this.asyncStorageService.get(
+        AsyncStorageEntries.JWT_PAYLOAD
+      ) as JwtPayload;
+
+      const stats = await this.statsModel.get({
+        manufacturerId,
+        sk: DBEntityType.STATS,
+      });
+
+      await this.statsModel.update({
+        manufacturerId,
+        sk: DBEntityType.STATS,
+        total: stats.total + items.length,
+      });
     });
+  }
+
+  async getDeviceStats(): Promise<ManufacturerStats> {
+    const { id: manufacturerId } = this.asyncStorageService.get(
+      AsyncStorageEntries.JWT_PAYLOAD
+    ) as JwtPayload;
+
+    const stats = await this.statsModel.get({
+      manufacturerId,
+      sk: DBEntityType.STATS,
+    });
+
+    return plainToInstance(ManufacturerStats, stats.toJSON());
   }
 }

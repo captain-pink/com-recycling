@@ -1,6 +1,7 @@
 import { singleton } from "tsyringe";
 import { ModelType } from "dynamoose/dist/General";
 import { CookieStore } from "@whatwg-node/cookie-store";
+import { randomUUID } from "crypto";
 
 import { LoginInput, SignUpInput } from "./model";
 import { AuthService, JwtService } from "../../common/service";
@@ -10,10 +11,12 @@ import { GetUsersCondition, UserItem } from "../../db";
 import { ResponseStatus } from "../common/constant";
 import { DBEntityType, UserType } from "../../db/dynamo/constant";
 import { BaseResponse, BaseSerivce } from "../common/model";
+import { StatsItem } from "../../db/dynamo/model/stats.model";
 
 @singleton()
 export class UserService extends BaseSerivce {
   private readonly userModel: ModelType<UserItem>;
+  private readonly statsModel: ModelType<StatsItem>;
 
   constructor(
     private readonly modelStore: ModelStore,
@@ -23,6 +26,7 @@ export class UserService extends BaseSerivce {
     super();
 
     this.userModel = this.modelStore.get(StoreModelEntryKey.USER);
+    this.statsModel = this.modelStore.get(StoreModelEntryKey.STATS);
   }
 
   async login(input: LoginInput, cookieStore: CookieStore) {
@@ -50,7 +54,7 @@ export class UserService extends BaseSerivce {
       }
 
       const { token, expires } = await this.jwtService.sign(
-        new JwtPayload(input.email, userItem.scopes)
+        new JwtPayload(userItem.userId, userItem.scopes)
       );
 
       cookieStore?.set({
@@ -76,14 +80,24 @@ export class UserService extends BaseSerivce {
     try {
       const hash = await this.authService.hashPassword(password);
 
+      const userId = randomUUID();
+
       await this.userModel.create({
         entityType: DBEntityType.USER,
         type,
         email,
         hash,
         companyName,
+        userId,
         scopes: [scope],
       });
+
+      if (type === UserType.MANUFACTURER) {
+        await this.statsModel.create({
+          manufacturerId: userId,
+          sk: DBEntityType.STATS,
+        });
+      }
 
       return new BaseResponse(ResponseStatus.OK);
     } catch (error) {

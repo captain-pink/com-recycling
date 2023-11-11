@@ -1,4 +1,5 @@
 import { Schema } from "dynamoose";
+import { IndexType } from "dynamoose/dist/Schema";
 
 import { StringLessOrEqual, createModel } from "../helper";
 import { DBEntityType, UserType } from "../constant";
@@ -35,6 +36,12 @@ const schema = new Schema(
       enum: [UserType.MANUFACTURER, UserType.RECYCLER],
       required: true,
     },
+    userId: {
+      type: String,
+      validate: StringLessOrEqual(50),
+      required: true,
+      index: { type: IndexType.local, name: "userIdIndex" },
+    },
     scopes: {
       type: Array,
       schema: [Number],
@@ -52,6 +59,8 @@ export class UserItem extends BaseItem {
   readonly hash: string;
   readonly type: UserType;
   readonly scopes: Array<number>;
+  // unique user id
+  readonly userId: string;
 }
 
 export const User = createModel<UserItem>("User", schema, {

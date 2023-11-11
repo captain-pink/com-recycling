@@ -4,6 +4,7 @@ export enum ErrorCode {
   INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR",
   FORBIDDEN = "FORBIDDEN",
   FAILED = "FAILED",
+  NOT_FOUND = "NOT_FOUND",
 }
 
 export enum ResponseStatus {
