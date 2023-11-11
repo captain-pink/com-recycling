@@ -1,12 +1,4 @@
-import {
-  Arg,
-  Args,
-  Authorized,
-  Ctx,
-  Mutation,
-  Query,
-  Resolver,
-} from "type-graphql";
+import { Arg, Args, Authorized, Mutation, Query, Resolver } from "type-graphql";
 import { singleton } from "tsyringe";
 
 import { DeviceService } from "./device.service";
@@ -15,15 +7,32 @@ import {
   CreateDevicesArgs,
   CreateDeviceCategoryArgs,
   Device,
-  QueryDeviceInfoArgs,
   ManufacturerStats,
 } from "./model";
 import { BaseResponse } from "../common/model";
+import { QueryDeviceInfoArgs } from "./model/query-device-info-args.model";
 
 @singleton()
 @Resolver()
 export class DeviceResolver {
   constructor(private readonly deviceService: DeviceService) {}
+
+  @Query(() => Device)
+  getDeviceInfo(@Args() args: QueryDeviceInfoArgs) {
+    return this.deviceService.queryDeviceInfo(args);
+  }
+
+  @Authorized(AuthScope.WRITE_MANUFACTURER)
+  @Query(() => [Device])
+  queryDevices(): Promise<Array<Device>> {
+    return this.deviceService.getDevices();
+  }
+
+  @Authorized(AuthScope.WRITE_MANUFACTURER)
+  @Query(() => ManufacturerStats)
+  queryManufacturerStats() {
+    return this.deviceService.getDeviceStats();
+  }
 
   @Authorized(AuthScope.WRITE_MANUFACTURER)
   @Mutation(() => BaseResponse)
@@ -50,11 +59,5 @@ export class DeviceResolver {
   @Query(() => Device)
   queryDeviceCategories() {
     return this.deviceService.queryDeviceCategories();
-  }
-
-  @Authorized(AuthScope.WRITE_MANUFACTURER)
-  @Query(() => ManufacturerStats)
-  queryManufacturerStats() {
-    return this.deviceService.getDeviceStats();
   }
 }

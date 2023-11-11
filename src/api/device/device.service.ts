@@ -1,4 +1,4 @@
-import { instanceToPlain } from "class-transformer";
+import { instanceToInstance, instanceToPlain } from "class-transformer";
 import { singleton } from "tsyringe";
 import { ModelType } from "dynamoose/dist/General";
 import { plainToInstance } from "class-transformer";
@@ -6,26 +6,24 @@ import { plainToInstance } from "class-transformer";
 import { JwtPayload, ModelStore } from "../../common/model";
 import {
   GetDevicesCondition,
-  GetDeviceCategoriesCondition,
   DeviceItem,
-  UserItem,
   DeviceCategoryItem,
+  GetDeviceCategoriesCondition,
 } from "../../db";
 import { AsyncStorageEntries, StoreModelEntryKey } from "../../common/constant";
 import { asBatch } from "../../api/common/helper";
 import { BaseSerivce, ApiError } from "../common/model";
-import { GetDeviceInfoArgs, ManufacturerStats } from "./model";
+import { Device, ManufacturerStats, QueryDeviceInfoArgs } from "./model";
 import { ErrorCode } from "../common/constant";
 import { DeviceInput } from "./model/create-devices-args.model";
 import { Component } from "./model/device.model";
 import { AsyncStorageService } from "../../common/service";
 import { StatsItem } from "../../db/dynamo/model/stats.model";
 import { DBEntityType } from "../../db/dynamo/constant";
-import { AuthenticationError } from "type-graphql";
+import { ComponentItem } from "../../db/dynamo/model/device-category.model";
 
 @singleton()
 export class DeviceService extends BaseSerivce {
-  private readonly userModel: ModelType<UserItem>;
   private readonly deviceModel: ModelType<DeviceItem>;
   private readonly deviceCategoryModel: ModelType<DeviceCategoryItem>;
   private readonly statsModel: ModelType<StatsItem>;
@@ -37,9 +35,10 @@ export class DeviceService extends BaseSerivce {
     super();
 
     this.deviceModel = this.modelStore.get(StoreModelEntryKey.DEVICE);
-    this.deviceCategoryModel = this.modelStore.get(StoreModelEntryKey.DEVICE_CATEGORY);
+    this.deviceCategoryModel = this.modelStore.get(
+      StoreModelEntryKey.DEVICE_CATEGORY
+    );
     this.statsModel = this.modelStore.get(StoreModelEntryKey.STATS);
-    this.userModel = this.modelStore.get(StoreModelEntryKey.USER);
   }
 
   async createDeviceCategory(category: string, components: Array<Component>) {
@@ -51,7 +50,9 @@ export class DeviceService extends BaseSerivce {
       await this.deviceCategoryModel.create({
         manufacturerId,
         category,
-        components: instanceToPlain(components)
+        components: components.map<ComponentItem>((component: Component) =>
+          instanceToInstance(component)
+        ),
       });
     });
   }
@@ -64,7 +65,7 @@ export class DeviceService extends BaseSerivce {
     const categories = await this.deviceCategoryModel
       .query(
         new GetDeviceCategoriesCondition({
-          manufacturerId
+          manufacturerId,
         })
       )
       .exec();
@@ -72,7 +73,7 @@ export class DeviceService extends BaseSerivce {
     return categories;
   }
 
-  async queryDeviceInfo(input: GetDeviceInfoArgs) {
+  async queryDeviceInfo(input: QueryDeviceInfoArgs) {
     const [deviceItem] = await this.deviceModel
       .query(
         new GetDevicesCondition({
@@ -93,7 +94,7 @@ export class DeviceService extends BaseSerivce {
       .query(
         new GetDeviceCategoriesCondition({
           manufacturerId: input.manufacturerId,
-          category: deviceItem.category
+          category: deviceItem.category,
         })
       )
       .exec();
@@ -118,7 +119,7 @@ export class DeviceService extends BaseSerivce {
         manufacturerId,
         serialNumber: device.serialNumber,
         category: device.category,
-        recycled: false,
+        isRecycled: false,
       };
     });
 
@@ -151,5 +152,17 @@ export class DeviceService extends BaseSerivce {
     });
 
     return plainToInstance(ManufacturerStats, stats.toJSON());
+  }
+
+  async getDevices() {
+    const { id: manufacturerId } = this.asyncStorageService.get(
+      AsyncStorageEntries.JWT_PAYLOAD
+    ) as JwtPayload;
+
+    const deviceItems = await this.deviceModel
+      .query(new GetDevicesCondition({ manufacturerId }))
+      .exec();
+
+    return deviceItems.map((item: DeviceItem) => plainToInstance(Device, item));
   }
 }
