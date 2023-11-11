@@ -17,7 +17,7 @@ export enum UserType {
 }
 
 export enum DeviceType {
-  PHONE = "Phone",
-  TABLET = "Tablet",
-  LAPTOP = "Laptop",
+  PHONE = "phone",
+  TABLET = "tablet",
+  LAPTOP = "laptop",
 }
