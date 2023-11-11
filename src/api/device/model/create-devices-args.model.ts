@@ -2,14 +2,13 @@ import { MaxLength } from "class-validator";
 import { ArgsType, Field, InputType } from "type-graphql";
 import { Component } from ".";
 
-
 @InputType()
 export class DeviceInput {
   @Field()
   readonly serialNumber: string;
   
   @Field(() => [Component])
-  readonly components: Array<any>;
+  readonly components: Array<Component>;
 }
 
 @ArgsType()
@@ -19,5 +18,5 @@ export class CreateDevicesArgs {
   readonly manufacturerId: string;
 
   @Field(() => [DeviceInput])
-  readonly devices: Array<any>;
+  readonly devices: Array<DeviceInput>;
 }

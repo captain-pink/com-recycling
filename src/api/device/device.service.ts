@@ -1,14 +1,13 @@
-import { ResolverData } from "type-graphql";
+import { instanceToPlain } from "class-transformer";
 import { singleton } from "tsyringe";
 import { ModelType } from "dynamoose/dist/General";
 
 import { ModelStore } from "../../common/model";
 import { GetDevicesCondition, DeviceItem } from "../../db";
-import { AuthScope, StoreModelEntryKey } from "../../common/constant";
-import { AppContext } from "../../common/type";
+import { StoreModelEntryKey } from "../../common/constant";
 import { asBatch } from "../../api/common/helper";
-import { BaseResponse, BaseSerivce, ApiError } from "../common/model";
-import { Device, GetDeviceInfoArgs } from "./model";
+import { BaseSerivce, ApiError } from "../common/model";
+import { GetDeviceInfoArgs } from "./model";
 import { ErrorCode } from "../common/constant";
 import { DeviceInput } from "./model/create-devices-args.model";
 
@@ -44,7 +43,7 @@ export class DeviceService extends BaseSerivce {
       return {
         manufacturerId,
         serialNumber: device.serialNumber,
-        components: device.components
+        components: instanceToPlain(device.components)
       };
     });
 
