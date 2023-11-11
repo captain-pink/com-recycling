@@ -1,5 +1,7 @@
+import { instanceToPlain } from "class-transformer";
 import { singleton } from "tsyringe";
 import { ModelType } from "dynamoose/dist/General";
+import { plainToInstance } from "class-transformer";
 
 import { JwtPayload, ModelStore } from "../../common/model";
 import { GetDevicesCondition, DeviceItem } from "../../db";
@@ -12,7 +14,6 @@ import { DeviceInput } from "./model/create-devices-args.model";
 import { AsyncStorageService } from "../../common/service";
 import { StatsItem } from "../../db/dynamo/model/stats.model";
 import { DBEntityType } from "../../db/dynamo/constant";
-import { plainToInstance } from "class-transformer";
 
 @singleton()
 export class DeviceService extends BaseSerivce {
@@ -58,7 +59,7 @@ export class DeviceService extends BaseSerivce {
       return {
         manufacturerId,
         serialNumber: device.serialNumber,
-        components: device.components,
+        components: instanceToPlain(device.components),
       };
     });
 
