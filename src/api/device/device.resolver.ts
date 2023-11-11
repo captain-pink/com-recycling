@@ -38,8 +38,8 @@ export class DeviceResolver {
   @Authorized(AuthScope.WRITE_MANUFACTURER)
   @Mutation(() => BaseResponse)
   createDevicesBatch(
-    @Args() { manufacturerId, devices }: CreateDevicesArgs
+    @Args() { devices }: CreateDevicesArgs
   ): Promise<BaseResponse> {
-    return this.deviceService.createDevicesBatch(manufacturerId, devices);
+    return this.deviceService.createDevicesBatch(devices);
   }
 }

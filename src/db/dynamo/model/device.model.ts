@@ -39,7 +39,6 @@ const schema = new Schema(
       type: Boolean,
       default: false,
       required: true,
-      index: { type: IndexType.local, name: "recycledIndex" },
     },
     components: {
       type: Array,
@@ -63,5 +62,5 @@ export class DeviceItem extends BaseItem {
 }
 
 export const Device = createModel<DeviceItem>("Device", schema, {
-  tableName: "Recycled",
+  tableName: "Recycling",
 });

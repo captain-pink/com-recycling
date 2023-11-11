@@ -6,12 +6,12 @@ import { CompositekeyFilter } from "../constant";
 
 export class GetUsersCondition extends Condition {
   constructor(
-    userItem: Partial<Pick<UserItem, "entityType" | "email">>,
+    userItem: Partial<Pick<UserItem, "entityType" | "email" | "userId">>,
     type = CompositekeyFilter.EQUAL
   ) {
     super();
 
-    const { entityType, email } = userItem;
+    const { entityType, email, userId } = userItem;
 
     if (!entityType) {
       throw new InternalServerError();
@@ -21,6 +21,10 @@ export class GetUsersCondition extends Condition {
 
     if (email) {
       this.and().where("email")[type](email);
+    }
+
+    if (userId) {
+      this.and().where("userId").eq(userId);
     }
   }
 }

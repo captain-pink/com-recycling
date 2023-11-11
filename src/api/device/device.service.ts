@@ -4,7 +4,12 @@ import { ModelType } from "dynamoose/dist/General";
 import { plainToInstance } from "class-transformer";
 
 import { JwtPayload, ModelStore } from "../../common/model";
-import { GetDevicesCondition, DeviceItem } from "../../db";
+import {
+  GetDevicesCondition,
+  DeviceItem,
+  UserItem,
+  GetUsersCondition,
+} from "../../db";
 import { AsyncStorageEntries, StoreModelEntryKey } from "../../common/constant";
 import { asBatch } from "../../api/common/helper";
 import { BaseSerivce, ApiError } from "../common/model";
@@ -14,9 +19,11 @@ import { DeviceInput } from "./model/create-devices-args.model";
 import { AsyncStorageService } from "../../common/service";
 import { StatsItem } from "../../db/dynamo/model/stats.model";
 import { DBEntityType } from "../../db/dynamo/constant";
+import { AuthenticationError } from "type-graphql";
 
 @singleton()
 export class DeviceService extends BaseSerivce {
+  private readonly userModel: ModelType<UserItem>;
   private readonly deviceModel: ModelType<DeviceItem>;
   private readonly statsModel: ModelType<StatsItem>;
 
@@ -28,6 +35,7 @@ export class DeviceService extends BaseSerivce {
 
     this.deviceModel = this.modelStore.get(StoreModelEntryKey.DEVICE);
     this.statsModel = this.modelStore.get(StoreModelEntryKey.STATS);
+    this.userModel = this.modelStore.get(StoreModelEntryKey.USER);
   }
 
   async getDeviceInfo(input: GetDeviceInfoArgs) {
@@ -51,14 +59,16 @@ export class DeviceService extends BaseSerivce {
   }
 
   // TODO: To add error handling for unprocessed items
-  async createDevicesBatch(
-    manufacturerId: string,
-    devices: Array<DeviceInput>
-  ) {
+  async createDevicesBatch(devices: Array<DeviceInput>) {
+    const { id: manufacturerId } = this.asyncStorageService.get(
+      AsyncStorageEntries.JWT_PAYLOAD
+    ) as JwtPayload;
+
     const items = devices.map((device: DeviceInput) => {
       return {
         manufacturerId,
         serialNumber: device.serialNumber,
+        recycled: false,
         components: instanceToPlain(device.components),
       };
     });
@@ -67,10 +77,6 @@ export class DeviceService extends BaseSerivce {
       for (const batch of asBatch(items)) {
         await this.deviceModel.batchPut(batch);
       }
-
-      const { id: manufacturerId } = this.asyncStorageService.get(
-        AsyncStorageEntries.JWT_PAYLOAD
-      ) as JwtPayload;
 
       const stats = await this.statsModel.get({
         manufacturerId,
