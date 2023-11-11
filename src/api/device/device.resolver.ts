@@ -54,9 +54,13 @@ export class DeviceResolver {
   @Authorized(AuthScope.WRITE_MANUFACTURER)
   @Mutation(() => BaseResponse)
   createDeviceCategory(
-    @Args() { category, components }: CreateDeviceCategoryArgs
+    @Args() { category, components, deviceType }: CreateDeviceCategoryArgs
   ): Promise<BaseResponse> {
-    return this.deviceService.createDeviceCategory(category, components);
+    return this.deviceService.createDeviceCategory(
+      category,
+      components,
+      deviceType
+    );
   }
 
   @Authorized(AuthScope.WRITE_MANUFACTURER)
