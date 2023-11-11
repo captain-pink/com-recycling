@@ -17,21 +17,16 @@ import { QueryDeviceInfoArgs } from "./model/query-device-info-args.model";
 export class DeviceResolver {
   constructor(private readonly deviceService: DeviceService) {}
 
-  @Query(() => Device)
-  getDeviceInfo(@Args() args: QueryDeviceInfoArgs) {
-    return this.deviceService.queryDeviceInfo(args);
-  }
-
   @Authorized(AuthScope.WRITE_MANUFACTURER)
   @Query(() => [Device])
   queryDevices(): Promise<Array<Device>> {
-    return this.deviceService.getDevices();
+    return this.deviceService.queryDevices();
   }
 
   @Authorized(AuthScope.WRITE_MANUFACTURER)
   @Query(() => ManufacturerStats)
   queryManufacturerStats() {
-    return this.deviceService.getDeviceStats();
+    return this.deviceService.queryDeviceStats();
   }
 
   @Authorized(AuthScope.WRITE_MANUFACTURER)
