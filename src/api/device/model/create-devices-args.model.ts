@@ -7,8 +7,8 @@ export class DeviceInput {
   @Field()
   readonly serialNumber: string;
 
-  @Field(() => [Component])
-  readonly components: Array<Component>;
+  @Field()
+  readonly category: string;  
 }
 
 @ArgsType()

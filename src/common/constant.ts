@@ -5,6 +5,7 @@ export enum InjectionToken {
 export enum StoreModelEntryKey {
   USER,
   DEVICE,
+  DEVICE_CATEGORY,
   STATS,
 }
 

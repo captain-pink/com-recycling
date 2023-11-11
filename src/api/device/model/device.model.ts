@@ -18,6 +18,12 @@ export class Device {
   @Field()
   readonly serialNumber: string;
 
+  @Field()
+  readonly category: string;
+
   @Field(() => [Component])
   readonly components: Array<Component>;
+
+  @Field()
+  readonly isRecycled: boolean;
 }

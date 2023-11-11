@@ -6,9 +6,10 @@ import { plainToInstance } from "class-transformer";
 import { JwtPayload, ModelStore } from "../../common/model";
 import {
   GetDevicesCondition,
+  GetDeviceCategoriesCondition,
   DeviceItem,
   UserItem,
-  GetUsersCondition,
+  DeviceCategoryItem,
 } from "../../db";
 import { AsyncStorageEntries, StoreModelEntryKey } from "../../common/constant";
 import { asBatch } from "../../api/common/helper";
@@ -16,6 +17,7 @@ import { BaseSerivce, ApiError } from "../common/model";
 import { GetDeviceInfoArgs, ManufacturerStats } from "./model";
 import { ErrorCode } from "../common/constant";
 import { DeviceInput } from "./model/create-devices-args.model";
+import { Component } from "./model/device.model";
 import { AsyncStorageService } from "../../common/service";
 import { StatsItem } from "../../db/dynamo/model/stats.model";
 import { DBEntityType } from "../../db/dynamo/constant";
@@ -25,6 +27,7 @@ import { AuthenticationError } from "type-graphql";
 export class DeviceService extends BaseSerivce {
   private readonly userModel: ModelType<UserItem>;
   private readonly deviceModel: ModelType<DeviceItem>;
+  private readonly deviceCategoryModel: ModelType<DeviceCategoryItem>;
   private readonly statsModel: ModelType<StatsItem>;
 
   constructor(
@@ -34,11 +37,42 @@ export class DeviceService extends BaseSerivce {
     super();
 
     this.deviceModel = this.modelStore.get(StoreModelEntryKey.DEVICE);
+    this.deviceCategoryModel = this.modelStore.get(StoreModelEntryKey.DEVICE_CATEGORY);
     this.statsModel = this.modelStore.get(StoreModelEntryKey.STATS);
     this.userModel = this.modelStore.get(StoreModelEntryKey.USER);
   }
 
-  async getDeviceInfo(input: GetDeviceInfoArgs) {
+  async createDeviceCategory(category: string, components: Array<Component>) {
+    const { id: manufacturerId } = this.asyncStorageService.get(
+      AsyncStorageEntries.JWT_PAYLOAD
+    ) as JwtPayload;
+
+    return this.replyWithBaseResponse(async () => {
+      await this.deviceCategoryModel.create({
+        manufacturerId,
+        category,
+        components: instanceToPlain(components)
+      });
+    });
+  }
+
+  async queryDeviceCategories() {
+    const { id: manufacturerId } = this.asyncStorageService.get(
+      AsyncStorageEntries.JWT_PAYLOAD
+    ) as JwtPayload;
+
+    const categories = await this.deviceCategoryModel
+      .query(
+        new GetDeviceCategoriesCondition({
+          manufacturerId
+        })
+      )
+      .exec();
+
+    return categories;
+  }
+
+  async queryDeviceInfo(input: GetDeviceInfoArgs) {
     const [deviceItem] = await this.deviceModel
       .query(
         new GetDevicesCondition({
@@ -55,7 +89,22 @@ export class DeviceService extends BaseSerivce {
       );
     }
 
-    return deviceItem;
+    const [category] = await this.deviceCategoryModel
+      .query(
+        new GetDeviceCategoriesCondition({
+          manufacturerId: input.manufacturerId,
+          category: deviceItem.category
+        })
+      )
+      .exec();
+
+    return {
+      manufacturerId: deviceItem.manufacturerId,
+      serialNumber: deviceItem.serialNumber,
+      category: deviceItem.category,
+      components: category.components,
+      isRecycled: deviceItem.isRecycled,
+    };
   }
 
   // TODO: To add error handling for unprocessed items
@@ -68,8 +117,8 @@ export class DeviceService extends BaseSerivce {
       return {
         manufacturerId,
         serialNumber: device.serialNumber,
+        category: device.category,
         recycled: false,
-        components: instanceToPlain(device.components),
       };
     });
 

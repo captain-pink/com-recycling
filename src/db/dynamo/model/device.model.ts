@@ -34,7 +34,7 @@ const schema = new Schema(
 export class DeviceItem extends BaseItem {
     readonly manufacturerId: string;
     readonly serialNumber: string;
-    readonly categiry: string;
+    readonly category: string;
     readonly recycled: boolean;
 }
 

@@ -3,7 +3,7 @@ import { Item } from "dynamoose/dist/Item";
 import { singleton } from "tsyringe";
 
 import { StoreModelEntryKey } from "../constant";
-import { User, Device } from "../../db";
+import { User, Device, DeviceCategory } from "../../db";
 import { Stats } from "../../db/dynamo/model/stats.model";
 
 @singleton()
@@ -11,6 +11,7 @@ export class ModelStore {
   private readonly _store = new Map<StoreModelEntryKey, ModelType<Item>>([
     [StoreModelEntryKey.USER, User],
     [StoreModelEntryKey.DEVICE, Device],
+    [StoreModelEntryKey.DEVICE_CATEGORY, DeviceCategory],
     [StoreModelEntryKey.STATS, Stats],
   ]);
 
