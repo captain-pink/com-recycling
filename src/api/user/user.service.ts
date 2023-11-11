@@ -3,7 +3,7 @@ import { ModelType } from "dynamoose/dist/General";
 import { CookieStore } from "@whatwg-node/cookie-store";
 import { randomUUID } from "crypto";
 
-import { LoginInput, SignUpInput } from "./model";
+import { LoginInput, SignUpInput, User } from "./model";
 import { AuthService, JwtService } from "../../common/service";
 import { AuthScope, StoreModelEntryKey } from "../../common/constant";
 import { JwtPayload, ModelStore } from "../../common/model";
@@ -87,7 +87,7 @@ export class UserService extends BaseSerivce {
 
       await this.userModel.create({
         entityType: DBEntityType.USER,
-        type,
+        userType: type,
         email,
         hash,
         companyName,
@@ -107,6 +107,23 @@ export class UserService extends BaseSerivce {
       console.error("Failed to sign up user", error);
       return new BaseResponse(ResponseStatus.FAILED);
     }
+  }
+
+  async queryUsers(userType: UserType): Promise<Array<User>> {
+    const users = await this.userModel
+      .query(
+        new GetUsersCondition({
+          entityType: DBEntityType.USER,
+          userType: userType,
+        })
+      )
+      .exec();  
+    return users.map((user) => {
+      return {
+        userId: user.userId,
+        companyName: user.companyName,
+      };
+    });
   }
 
   private setJwtCookie(

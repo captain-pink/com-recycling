@@ -1,8 +1,8 @@
-import { Arg, Ctx, Mutation, Resolver } from "type-graphql";
+import { Arg, Args, Ctx, Mutation, Query, Resolver } from "type-graphql";
 import { singleton } from "tsyringe";
 
 import { UserService } from "./user.service";
-import { LoginInput, SignUpInput } from "./model";
+import { User, LoginInput, SignUpInput, QueryUsersArgs } from "./model";
 import { BaseResponse } from "../common/model";
 import { AppContext } from "../../common/type";
 
@@ -29,5 +29,10 @@ export class UserResolver {
   @Mutation(() => BaseResponse)
   signUp(@Arg("data") input: SignUpInput) {
     return this.userService.signUp(input);
+  }
+
+  @Query(() => [User])
+  queryUsers(@Args() { type }: QueryUsersArgs) {
+    return this.userService.queryUsers(type);
   }
 }

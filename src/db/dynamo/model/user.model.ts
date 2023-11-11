@@ -31,7 +31,7 @@ const schema = new Schema(
       validate: StringLessOrEqual(100),
       required: true,
     },
-    type: {
+    userType: {
       type: Number,
       enum: [UserType.MANUFACTURER, UserType.RECYCLER],
       required: true,
@@ -57,7 +57,7 @@ export class UserItem extends BaseItem {
   readonly email: string;
   readonly companyName: string;
   readonly hash: string;
-  readonly type: UserType;
+  readonly userType: UserType;
   readonly scopes: Array<number>;
   // unique user id
   readonly userId: string;
