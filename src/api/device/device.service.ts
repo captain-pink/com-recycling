@@ -17,7 +17,12 @@ import {
 } from "../../common/constant";
 import { asBatch } from "../../api/common/helper";
 import { BaseSerivce, NotFoundError } from "../common/model";
-import { Device, DeviceCategory, ManufacturerStats, QueryDeviceInfoArgs } from "./model";
+import {
+  Device,
+  DeviceCategory,
+  ManufacturerStats,
+  QueryDeviceInfoArgs,
+} from "./model";
 import { DeviceInput } from "./model/create-devices-args.model";
 import { Component } from "./model/device.model";
 import {
@@ -26,7 +31,7 @@ import {
   QrService,
 } from "../../common/service";
 import { StatsItem } from "../../db/dynamo/model/stats.model";
-import { DBEntityType } from "../../db/dynamo/constant";
+import { CompositekeyFilter, DBEntityType } from "../../db/dynamo/constant";
 import { ComponentItem } from "../../db/dynamo/model/device-category.model";
 import { SystemConfig } from "../../common/type";
 
@@ -64,7 +69,7 @@ export class DeviceService extends BaseSerivce {
       await this.deviceCategoryModel.create({
         manufacturerId,
         category: `${DBEntityType.CATEGORY}_${category}`,
-        components: instanceToPlain(components) as Array<ComponentItem>
+        components: instanceToPlain(components) as Array<ComponentItem>,
       });
     });
   }
@@ -76,18 +81,22 @@ export class DeviceService extends BaseSerivce {
 
     const categories = await this.deviceCategoryModel
       .query(
-        new GetDeviceCategoriesCondition({
-          manufacturerId,
-        })
+        new GetDeviceCategoriesCondition(
+          {
+            manufacturerId,
+            category: `${DBEntityType.CATEGORY}_`,
+          },
+          CompositekeyFilter.BEGINS_WITH
+        )
       )
       .exec();
-    return categories.map(deviceCategory => {
-        return {
-          manufacturerId: deviceCategory.manufacturerId,
-          category: deviceCategory.category.split('_')[1],
-          components: plainToInstance(ComponentItem, deviceCategory.components),
-        };
-      });
+    return categories.map((deviceCategory) => {
+      return {
+        manufacturerId: deviceCategory.manufacturerId,
+        category: deviceCategory.category.split("_")[1],
+        components: plainToInstance(ComponentItem, deviceCategory.components),
+      };
+    });
   }
 
   async queryDeviceInfo(input: QueryDeviceInfoArgs) {
@@ -101,15 +110,15 @@ export class DeviceService extends BaseSerivce {
       .query(
         new GetDeviceCategoriesCondition({
           manufacturerId: input.manufacturerId,
-          category: deviceItem.category,
+          category: `${DBEntityType.CATEGORY}_${deviceItem.category}`,
         })
       )
       .exec();
 
     return {
       manufacturerId: deviceItem.manufacturerId,
-      serialNumber: deviceItem.serialNumber.split('_')[1],
-      category: deviceItem.category.split('_')[1],
+      serialNumber: deviceItem.serialNumber.split("_")[1],
+      category: deviceItem.category.split("_")[1],
       components: category.components,
       isRecycled: deviceItem.isRecycled,
     };
@@ -133,12 +142,15 @@ export class DeviceService extends BaseSerivce {
     return this.qrService.generateQrCode(url);
   }
 
-  private async getDeviceItem(input: QueryDeviceInfoArgs) {
+  private async getDeviceItem({
+    manufacturerId,
+    serialNumber,
+  }: QueryDeviceInfoArgs) {
     const [deviceItem] = await this.deviceModel
       .query(
         new GetDevicesCondition({
-          manufacturerId: input.manufacturerId,
-          serialNumber: input.serialNumber,
+          manufacturerId: manufacturerId,
+          serialNumber: `${DBEntityType.SERIAL_NUMBER}_${serialNumber}`,
         })
       )
       .exec();
@@ -198,15 +210,20 @@ export class DeviceService extends BaseSerivce {
     ) as JwtPayload;
 
     const deviceItems = await this.deviceModel
-      .query(new GetDevicesCondition({ manufacturerId }))
+      .query(
+        new GetDevicesCondition(
+          { manufacturerId, serialNumber: `${DBEntityType.SERIAL_NUMBER}_` },
+          CompositekeyFilter.BEGINS_WITH
+        )
+      )
       .exec();
 
     return deviceItems.map((item: DeviceItem) => {
       return {
         manufacturerId: item.manufacturerId,
-        serialNumber: item.serialNumber.split('_')[1],
-        category: item.category.split('_')[1],
-        isRecycled: item.isRecycled
+        serialNumber: item.serialNumber.split("_")[1],
+        category: item.category.split("_")[1],
+        isRecycled: item.isRecycled,
       };
     });
   }

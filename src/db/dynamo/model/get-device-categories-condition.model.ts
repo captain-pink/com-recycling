@@ -20,10 +20,9 @@ export class GetDeviceCategoriesCondition extends Condition {
     }
 
     this.where("manufacturerId").eq(manufacturerId);
-    this.and().where("category")[CompositekeyFilter.BEGINS_WITH](DBEntityType.CATEGORY);
 
     if (category) {
-      this.and().where("category")[type](`${DBEntityType.CATEGORY}_${category}`);
+      this.and().where("category")[type](category);
     }
   }
 }

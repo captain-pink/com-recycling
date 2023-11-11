@@ -12,6 +12,13 @@ export class UserResolver {
   constructor(private readonly userService: UserService) {}
 
   @Mutation(() => BaseResponse)
+  queryClientToken(
+    @Ctx() ctx: Pick<AppContext, "request">
+  ): Promise<BaseResponse> {
+    return this.userService.clientLogin(ctx.request.cookieStore!);
+  }
+
+  @Mutation(() => BaseResponse)
   login(
     @Arg("data") input: LoginInput,
     @Ctx() ctx: Pick<AppContext, "request">

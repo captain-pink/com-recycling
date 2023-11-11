@@ -13,7 +13,7 @@ const schema = new Schema(
     },
     sk: {
       type: String,
-      validate: StringLessOrEqual(30),
+      validate: StringLessOrEqual(100),
       required: true,
       rangeKey: true,
       map: "serialNumber",

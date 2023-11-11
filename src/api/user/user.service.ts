@@ -12,6 +12,7 @@ import { ResponseStatus } from "../common/constant";
 import { DBEntityType, UserType } from "../../db/dynamo/constant";
 import { BaseResponse, BaseSerivce } from "../common/model";
 import { StatsItem } from "../../db/dynamo/model/stats.model";
+import { AuthenticationError } from "type-graphql";
 
 @singleton()
 export class UserService extends BaseSerivce {
@@ -27,6 +28,16 @@ export class UserService extends BaseSerivce {
 
     this.userModel = this.modelStore.get(StoreModelEntryKey.USER);
     this.statsModel = this.modelStore.get(StoreModelEntryKey.STATS);
+  }
+
+  async clientLogin(cookieStore: CookieStore) {
+    return this.replyWithBaseResponse(async () => {
+      const { token, expires } = await this.jwtService.sign(
+        new JwtPayload("ANONYMOUS", [AuthScope.READ])
+      );
+
+      this.setJwtCookie(cookieStore, token, expires);
+    });
   }
 
   async login(input: LoginInput, cookieStore: CookieStore) {
@@ -57,21 +68,13 @@ export class UserService extends BaseSerivce {
         new JwtPayload(userItem.userId, userItem.scopes)
       );
 
-      cookieStore?.set({
-        name: "_jwt",
-        value: token,
-        expires: expires * 1000,
-        domain: null,
-        sameSite: "lax",
-        // secure: true,
-        // httpOnly: true,
-        // domain: "localhost",
-      });
+      this.setJwtCookie(cookieStore, token, expires);
     });
   }
 
   async signUp(input: SignUpInput): Promise<BaseResponse> {
     const { email, password, type, companyName } = input;
+
     const scope =
       type === UserType.MANUFACTURER
         ? AuthScope.WRITE_MANUFACTURER
@@ -104,5 +107,22 @@ export class UserService extends BaseSerivce {
       console.error("Failed to sign up user", error);
       return new BaseResponse(ResponseStatus.FAILED);
     }
+  }
+
+  private setJwtCookie(
+    cookieStore: CookieStore,
+    token: string,
+    expires: number
+  ) {
+    cookieStore?.set({
+      name: "_jwt",
+      value: token,
+      expires: expires * 1000,
+      domain: null,
+      sameSite: "lax",
+      // secure: true,
+      // httpOnly: true,
+      // domain: "localhost",
+    });
   }
 }

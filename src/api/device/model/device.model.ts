@@ -5,7 +5,7 @@ import { Field, ObjectType, InputType } from "type-graphql";
 export class Component {
   @Field()
   readonly material: string;
-  
+
   @Field()
   readonly amount: number;
 }
@@ -22,7 +22,7 @@ export class Device {
   readonly category: string;
 
   @Field(() => [Component], { nullable: true })
-  readonly components: Array<Component>;
+  readonly components?: Array<Component>;
 
   @Field()
   readonly isRecycled: boolean;
