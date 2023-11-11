@@ -6,3 +6,4 @@ export { CreateDeviceCategoryArgs } from "./create-device-category-args.model";
 export { Component } from "./device.model";
 export { ManufacturerStats } from "./manufacturer-stats.model";
 export { QueryQrArgs } from "./query-qr-args.model";
+export { RecycleDeviceArgs } from "./recycle-device-args.model";

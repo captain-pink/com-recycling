@@ -9,6 +9,8 @@ import {
   DeviceItem,
   DeviceCategoryItem,
   GetDeviceCategoriesCondition,
+  GetUsersCondition,
+  UserItem,
 } from "../../db";
 import {
   AsyncStorageEntries,
@@ -16,7 +18,7 @@ import {
   StoreModelEntryKey,
 } from "../../common/constant";
 import { asBatch } from "../../api/common/helper";
-import { BaseSerivce, NotFoundError } from "../common/model";
+import { ApiError, BaseSerivce, NotFoundError } from "../common/model";
 import {
   Device,
   DeviceCategory,
@@ -34,9 +36,11 @@ import { StatsItem } from "../../db/dynamo/model/stats.model";
 import { CompositekeyFilter, DBEntityType } from "../../db/dynamo/constant";
 import { ComponentItem } from "../../db/dynamo/model/device-category.model";
 import { SystemConfig } from "../../common/type";
+import { ErrorCode } from "../common/constant";
 
 @singleton()
 export class DeviceService extends BaseSerivce {
+  private readonly userModel: ModelType<UserItem>;
   private readonly deviceModel: ModelType<DeviceItem>;
   private readonly deviceCategoryModel: ModelType<DeviceCategoryItem>;
   private readonly statsModel: ModelType<StatsItem>;
@@ -50,6 +54,7 @@ export class DeviceService extends BaseSerivce {
   ) {
     super();
 
+    this.userModel = this.modelStore.get(StoreModelEntryKey.USER);
     this.deviceModel = this.modelStore.get(StoreModelEntryKey.DEVICE);
     this.deviceCategoryModel = this.modelStore.get(
       StoreModelEntryKey.DEVICE_CATEGORY
@@ -64,8 +69,6 @@ export class DeviceService extends BaseSerivce {
     ) as JwtPayload;
 
     return this.replyWithBaseResponse(async () => {
-      console.log(DBEntityType.CATEGORY);
-      console.log(`${DBEntityType.CATEGORY}_${category}`);
       await this.deviceCategoryModel.create({
         manufacturerId,
         category: `${DBEntityType.CATEGORY}_${category}`,
@@ -121,6 +124,7 @@ export class DeviceService extends BaseSerivce {
       category: deviceItem.category.split("_")[1],
       components: category.components,
       isRecycled: deviceItem.isRecycled,
+      recycledBy: deviceItem.recycledBy,
     };
   }
 
@@ -224,7 +228,49 @@ export class DeviceService extends BaseSerivce {
         serialNumber: item.serialNumber.split("_")[1],
         category: item.category.split("_")[1],
         isRecycled: item.isRecycled,
+        recycledBy: item.recycledBy,
       };
+    });
+  }
+
+  async recycleDevice(manufacturerId: string, serialNumber: string) {
+    const { id: recyclerId } = this.asyncStorageService.get(
+      AsyncStorageEntries.JWT_PAYLOAD
+    ) as JwtPayload;
+
+    return this.replyWithBaseResponse(async () => {
+      const deviceItem = await this.getDeviceItem({
+        manufacturerId,
+        serialNumber,
+      });
+      
+      if (!deviceItem) {
+        throw new NotFoundError();
+      }
+
+      if (deviceItem.isRecycled) {
+        return new ApiError(ErrorCode.INVALID_ARGUMENT, "Device is already recycled");
+      }
+
+      const [recycler] = await this.userModel
+        .query(
+          new GetUsersCondition({
+            entityType: DBEntityType.USER,
+            userId: recyclerId
+          })
+        )
+        .exec();
+
+      if (!recycler) {
+        throw new ApiError(ErrorCode.INTERNAL_SERVER_ERROR, "Recycler is not found");
+      }
+
+      await this.deviceModel.update({
+        manufacturerId,
+        serialNumber: `${DBEntityType.SERIAL_NUMBER}_${serialNumber}`,
+        isRecycled: true,
+        recycledBy: recycler.companyName
+      });
     });
   }
 }

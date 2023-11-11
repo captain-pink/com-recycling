@@ -27,6 +27,9 @@ const schema = new Schema(
       default: false,
       required: true,
     },
+    recycledBy: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
@@ -36,6 +39,7 @@ export class DeviceItem extends BaseItem {
   readonly serialNumber: string;
   readonly category: string;
   readonly isRecycled: boolean;
+  readonly recycledBy: string;
 }
 
 export const Device = createModel<DeviceItem>("Device", schema, {

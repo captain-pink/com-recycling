@@ -26,4 +26,7 @@ export class Device {
 
   @Field()
   readonly isRecycled: boolean;
+
+  @Field({ nullable: true })
+  readonly recycledBy: string;
 }

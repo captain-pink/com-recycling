@@ -5,6 +5,7 @@ export enum ErrorCode {
   FORBIDDEN = "FORBIDDEN",
   FAILED = "FAILED",
   NOT_FOUND = "NOT_FOUND",
+  INVALID_ARGUMENT = "INVALID_ARGUMENT",
 }
 
 export enum ResponseStatus {

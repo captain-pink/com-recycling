@@ -10,6 +10,7 @@ import {
   DeviceCategory,
   ManufacturerStats,
   QueryQrArgs,
+  RecycleDeviceArgs,
 } from "./model";
 import { BaseResponse } from "../common/model";
 import { QueryDeviceInfoArgs } from "./model/query-device-info-args.model";
@@ -62,5 +63,13 @@ export class DeviceResolver {
   @Query(() => [DeviceCategory])
   queryDeviceCategories() {
     return this.deviceService.queryDeviceCategories();
+  }
+
+  @Authorized(AuthScope.WRITE_RECYCLER)
+  @Mutation(() => BaseResponse)
+  recycleDevice(
+    @Args() { manufacturerId, serialNumber }: RecycleDeviceArgs
+  ): Promise<BaseResponse> {
+    return this.deviceService.recycleDevice(manufacturerId, serialNumber);
   }
 }
