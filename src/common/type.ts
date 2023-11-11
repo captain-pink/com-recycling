@@ -16,9 +16,14 @@ export type SystemConfig = {
   readonly domain: string;
 };
 
+export type MaterialsConfig = {
+  readonly material_costs: Map<string, number>;
+};
+
 export type ApplicationConfig = {
   readonly [ConfigEntries.SYSTEM]: SystemConfig;
   readonly [ConfigEntries.AUTH]: AuthConfig;
+  readonly [ConfigEntries.MATERIALS]: MaterialsConfig;
 };
 
 export type AppContext = {

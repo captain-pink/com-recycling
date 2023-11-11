@@ -32,7 +32,7 @@ export class UserResolver {
   }
 
   @Query(() => [User])
-  queryUsers(@Args() { type }: QueryUsersArgs) {
-    return this.userService.queryUsers(type);
+  queryUsers(@Args() { userType }: QueryUsersArgs) {
+    return this.userService.queryUsers(userType);
   }
 }

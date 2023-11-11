@@ -29,4 +29,7 @@ export class Device {
 
   @Field({ nullable: true })
   readonly recycledBy: string;
+
+  @Field()
+  readonly totalCost: number;
 }

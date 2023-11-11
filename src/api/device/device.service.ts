@@ -39,7 +39,7 @@ import {
   DeviceType,
 } from "../../db/dynamo/constant";
 import { ComponentItem } from "../../db/dynamo/model/device-category.model";
-import { SystemConfig } from "../../common/type";
+import { SystemConfig, MaterialsConfig } from "../../common/type";
 import { ErrorCode } from "../common/constant";
 
 @singleton()
@@ -49,6 +49,7 @@ export class DeviceService extends BaseSerivce {
   private readonly deviceCategoryModel: ModelType<DeviceCategoryItem>;
   private readonly statsModel: ModelType<StatsItem>;
   private readonly systemConfig: SystemConfig;
+  private readonly materialsConfig: MaterialsConfig;
 
   constructor(
     private readonly modelStore: ModelStore,
@@ -65,6 +66,7 @@ export class DeviceService extends BaseSerivce {
     );
     this.statsModel = this.modelStore.get(StoreModelEntryKey.STATS);
     this.systemConfig = this.configService.get(ConfigEntries.SYSTEM);
+    this.materialsConfig = this.configService.get(ConfigEntries.MATERIALS);
   }
 
   async createDeviceCategory(
@@ -118,10 +120,6 @@ export class DeviceService extends BaseSerivce {
   async queryDeviceInfo(input: QueryDeviceInfoArgs) {
     const deviceItem = await this.getDeviceItem(input);
 
-    if (!deviceItem) {
-      throw new NotFoundError();
-    }
-
     const [category] = await this.deviceCategoryModel
       .query(
         new GetDeviceCategoriesCondition({
@@ -133,12 +131,22 @@ export class DeviceService extends BaseSerivce {
 
     return {
       manufacturerId: deviceItem.manufacturerId,
-      serialNumber: deviceItem.serialNumber.split("_")[1],
-      category: deviceItem.category.split("_")[1],
+      serialNumber: deviceItem.serialNumber,
+      category: deviceItem.category,
       components: category.components,
       isRecycled: deviceItem.isRecycled,
       recycledBy: deviceItem.recycledBy,
+      totalCost: this.calculateTotalCost(category.components)
     };
+  }
+
+  private calculateTotalCost(components: Array<ComponentItem>) {
+    let m = new Map<string, number>(Object.entries(this.materialsConfig.material_costs));
+    return (components
+      .map((component: ComponentItem) => {
+      return component.amount * m.get(component.material)!;
+      })
+      .reduce((sum, current) => sum + current, 0) / 1000).toFixed(2);
   }
 
   async generateDeviceQr(serialNumber: string) {
@@ -151,9 +159,6 @@ export class DeviceService extends BaseSerivce {
       serialNumber,
     });
 
-    if (!deviceItem) {
-      throw new NotFoundError();
-    }
     const url = `${this.systemConfig.domain}/recycle/${manufacturerId}/${deviceItem.serialNumber}`;
 
     return this.qrService.generateQrCode(url);
@@ -172,7 +177,17 @@ export class DeviceService extends BaseSerivce {
       )
       .exec();
 
-    return deviceItem;
+    if (!deviceItem) {
+      throw new NotFoundError();
+    }
+
+    return {
+      manufacturerId: deviceItem.manufacturerId,
+      serialNumber: deviceItem.serialNumber.split("_")[1],
+      category: deviceItem.category.split("_")[1],
+      isRecycled: deviceItem.isRecycled,
+      recycledBy: deviceItem.recycledBy,
+    };
   }
 
   // TODO: To add error handling for unprocessed items
@@ -256,10 +271,6 @@ export class DeviceService extends BaseSerivce {
         manufacturerId,
         serialNumber,
       });
-
-      if (!deviceItem) {
-        throw new NotFoundError();
-      }
 
       if (deviceItem.isRecycled) {
         return new ApiError(

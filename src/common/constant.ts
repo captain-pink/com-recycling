@@ -12,6 +12,7 @@ export enum StoreModelEntryKey {
 export enum ConfigEntries {
   SYSTEM = "system",
   AUTH = "auth",
+  MATERIALS = "materials",
 }
 
 export enum AuthScope {

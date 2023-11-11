@@ -4,7 +4,7 @@ import { ArgsType, Field } from "type-graphql";
 @ArgsType()
 export class QueryDeviceInfoArgs {
   @Field()
-  @MaxLength(30)
+  @MaxLength(100)
   readonly manufacturerId: string;
 
   @Field()
