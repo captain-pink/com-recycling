@@ -41,7 +41,7 @@ export class UserService extends BaseSerivce {
       }
 
       const passwordValid = await this.authService.verifyLogin(
-        input.passowrd,
+        input.password,
         userItem.hash
       );
 
