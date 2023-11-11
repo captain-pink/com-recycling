@@ -10,6 +10,10 @@ export class SignUpInput {
   readonly email: string;
 
   @Field()
+  @MaxLength(150)
+  readonly companyName: string;
+
+  @Field()
   @IsStrongPassword({
     minLength: 10,
     minSymbols: 1,

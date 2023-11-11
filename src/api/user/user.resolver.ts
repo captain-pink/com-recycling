@@ -2,7 +2,7 @@ import { Arg, Ctx, Mutation, Resolver } from "type-graphql";
 import { singleton } from "tsyringe";
 
 import { UserService } from "./user.service";
-import { LoggedIn, LoginInput, SignUpInput } from "./model";
+import { LoginInput, SignUpInput } from "./model";
 import { BaseResponse } from "../common/model";
 import { AppContext } from "../../common/type";
 

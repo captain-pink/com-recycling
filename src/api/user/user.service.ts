@@ -67,7 +67,7 @@ export class UserService extends BaseSerivce {
   }
 
   async signUp(input: SignUpInput): Promise<BaseResponse> {
-    const { email, password, type } = input;
+    const { email, password, type, companyName } = input;
     const scope =
       type === UserType.MANUFACTURER
         ? AuthScope.WRITE_MANUFACTURER
@@ -81,6 +81,7 @@ export class UserService extends BaseSerivce {
         type,
         email,
         hash,
+        companyName,
         scopes: [scope],
       });
 

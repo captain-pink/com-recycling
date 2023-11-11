@@ -20,6 +20,11 @@ const schema = new Schema(
       rangeKey: true,
       map: "email",
     },
+    companyName: {
+      type: String,
+      validate: StringLessOrEqual(150),
+      required: true,
+    },
     hash: {
       type: String,
       validate: StringLessOrEqual(100),
@@ -43,6 +48,7 @@ export class UserItem extends BaseItem {
   // constant USER
   readonly entityType: string;
   readonly email: string;
+  readonly companyName: string;
   readonly hash: string;
   readonly type: UserType;
   readonly scopes: Array<number>;
