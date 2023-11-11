@@ -1,5 +1,4 @@
 import { singleton } from "tsyringe";
-import { AuthenticationError } from "type-graphql";
 
 import { ConfigEntries } from "../constant";
 import { ConfigService } from ".";

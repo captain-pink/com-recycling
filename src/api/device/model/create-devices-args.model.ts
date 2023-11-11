@@ -1,6 +1,4 @@
-import { MaxLength } from "class-validator";
 import { ArgsType, Field, InputType } from "type-graphql";
-import { Component } from ".";
 
 @InputType()
 export class DeviceInput {
@@ -8,7 +6,7 @@ export class DeviceInput {
   readonly serialNumber: string;
 
   @Field()
-  readonly category: string;  
+  readonly category: string;
 }
 
 @ArgsType()

@@ -16,11 +16,13 @@
     "elysia": "latest",
     "graphql-yoga": "^5.0.0",
     "jose": "^5.1.0",
+    "qrcode": "^1.5.3",
     "tsyringe": "^4.8.0",
     "type-graphql": "next",
     "winston": "^3.11.0"
   },
   "devDependencies": {
+    "@types/qrcode": "^1.5.5",
     "bun-types": "latest"
   },
   "module": "src/index.js",

@@ -1,4 +1,4 @@
-import { instanceToInstance, instanceToPlain } from "class-transformer";
+import { instanceToPlain } from "class-transformer";
 import { singleton } from "tsyringe";
 import { ModelType } from "dynamoose/dist/General";
 import { plainToInstance } from "class-transformer";
@@ -10,27 +10,38 @@ import {
   DeviceCategoryItem,
   GetDeviceCategoriesCondition,
 } from "../../db";
-import { AsyncStorageEntries, StoreModelEntryKey } from "../../common/constant";
+import {
+  AsyncStorageEntries,
+  ConfigEntries,
+  StoreModelEntryKey,
+} from "../../common/constant";
 import { asBatch } from "../../api/common/helper";
-import { BaseSerivce, ApiError } from "../common/model";
+import { BaseSerivce, NotFoundError } from "../common/model";
 import { Device, ManufacturerStats, QueryDeviceInfoArgs } from "./model";
-import { ErrorCode } from "../common/constant";
 import { DeviceInput } from "./model/create-devices-args.model";
 import { Component } from "./model/device.model";
-import { AsyncStorageService } from "../../common/service";
+import {
+  AsyncStorageService,
+  ConfigService,
+  QrService,
+} from "../../common/service";
 import { StatsItem } from "../../db/dynamo/model/stats.model";
 import { DBEntityType } from "../../db/dynamo/constant";
 import { ComponentItem } from "../../db/dynamo/model/device-category.model";
+import { SystemConfig } from "../../common/type";
 
 @singleton()
 export class DeviceService extends BaseSerivce {
   private readonly deviceModel: ModelType<DeviceItem>;
   private readonly deviceCategoryModel: ModelType<DeviceCategoryItem>;
   private readonly statsModel: ModelType<StatsItem>;
+  private readonly systemConfig: SystemConfig;
 
   constructor(
     private readonly modelStore: ModelStore,
-    private readonly asyncStorageService: AsyncStorageService
+    private readonly asyncStorageService: AsyncStorageService,
+    private readonly qrService: QrService,
+    private readonly configService: ConfigService
   ) {
     super();
 
@@ -39,6 +50,7 @@ export class DeviceService extends BaseSerivce {
       StoreModelEntryKey.DEVICE_CATEGORY
     );
     this.statsModel = this.modelStore.get(StoreModelEntryKey.STATS);
+    this.systemConfig = this.configService.get(ConfigEntries.SYSTEM);
   }
 
   async createDeviceCategory(category: string, components: Array<Component>) {
@@ -50,7 +62,7 @@ export class DeviceService extends BaseSerivce {
       await this.deviceCategoryModel.create({
         manufacturerId,
         category,
-        components: instanceToPlain(components) as Array<ComponentItem>
+        components: instanceToPlain(components) as Array<ComponentItem>,
       });
     });
   }
@@ -72,20 +84,10 @@ export class DeviceService extends BaseSerivce {
   }
 
   async queryDeviceInfo(input: QueryDeviceInfoArgs) {
-    const [deviceItem] = await this.deviceModel
-      .query(
-        new GetDevicesCondition({
-          manufacturerId: input.manufacturerId,
-          serialNumber: input.serialNumber,
-        })
-      )
-      .exec();
+    const deviceItem = await this.getDeviceItem(input);
 
     if (!deviceItem) {
-      throw new ApiError(
-        ErrorCode.NOT_FOUND,
-        "The device is not registered in the system"
-      );
+      throw new NotFoundError();
     }
 
     const [category] = await this.deviceCategoryModel
@@ -104,6 +106,37 @@ export class DeviceService extends BaseSerivce {
       components: category.components,
       isRecycled: deviceItem.isRecycled,
     };
+  }
+
+  async generateDeviceQr(serialNumber: string) {
+    const { id: manufacturerId } = this.asyncStorageService.get(
+      AsyncStorageEntries.JWT_PAYLOAD
+    );
+
+    const deviceItem = await this.getDeviceItem({
+      manufacturerId,
+      serialNumber,
+    });
+
+    if (!deviceItem) {
+      throw new NotFoundError();
+    }
+    const url = `${this.systemConfig.domain}/recycle/${manufacturerId}/${deviceItem.serialNumber}`;
+
+    return this.qrService.generateQrCode(url);
+  }
+
+  private async getDeviceItem(input: QueryDeviceInfoArgs) {
+    const [deviceItem] = await this.deviceModel
+      .query(
+        new GetDevicesCondition({
+          manufacturerId: input.manufacturerId,
+          serialNumber: input.serialNumber,
+        })
+      )
+      .exec();
+
+    return deviceItem;
   }
 
   // TODO: To add error handling for unprocessed items
