@@ -28,7 +28,7 @@ export class AuthCheckerService
     const cookieToken = await context.request.cookieStore?.get("_jwt");
 
     const jwt = cookieToken?.value ?? headerToken;
-
+    console.log("jwt, jw", jwt);
     if (!jwt) {
       throw new AuthenticationError();
     }

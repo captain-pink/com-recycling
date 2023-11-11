@@ -1,4 +1,4 @@
-import { Arg, Args, Authorized, Mutation, Query, Resolver } from "type-graphql";
+import { Args, Authorized, Mutation, Query, Resolver } from "type-graphql";
 import { singleton } from "tsyringe";
 
 import { DeviceService } from "./device.service";
@@ -9,6 +9,7 @@ import {
   Device,
   DeviceCategory,
   ManufacturerStats,
+  QueryQrArgs,
 } from "./model";
 import { BaseResponse } from "../common/model";
 import { QueryDeviceInfoArgs } from "./model/query-device-info-args.model";
@@ -22,6 +23,12 @@ export class DeviceResolver {
   @Query(() => [Device])
   queryDevices(): Promise<Array<Device>> {
     return this.deviceService.queryDevices();
+  }
+
+  @Authorized(AuthScope.WRITE_MANUFACTURER)
+  @Query(() => String)
+  queryDeviceRecycleQr(@Args() { serialNumber }: QueryQrArgs) {
+    return this.deviceService.generateDeviceQr(serialNumber);
   }
 
   @Authorized(AuthScope.WRITE_MANUFACTURER)

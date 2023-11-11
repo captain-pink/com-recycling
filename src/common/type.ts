@@ -12,7 +12,9 @@ export type AuthConfig = {
   readonly jwt: JwtConfig;
 };
 
-export type SystemConfig = {};
+export type SystemConfig = {
+  readonly domain: string;
+};
 
 export type ApplicationConfig = {
   readonly [ConfigEntries.SYSTEM]: SystemConfig;
