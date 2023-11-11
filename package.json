@@ -3,12 +3,22 @@
   "version": "1.0.50",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bun run --watch src/index.ts"
+    "clear:artifacts": "bun install && rm -rf ./dist && rm -rf source && mkdir ./dist && mkdir source",
+    "build:local": "bun run clear:artifacts && bun build src/index.ts --target bun --outfile ./dist/index.js",
+    "build:lambda": "bun run clear:artifacts && bun build src/lambda.ts --target bun --outfile ./dist/index.js",
+    "dev": "bun run --watch src/index.ts",
+    "lambda:prepare:source": "bun build:lambda && cp ./dist/index.js ./source",
+    "lambda:zip": "bun lambda:prepare:source && zip -r lambda.zip ./source",
+    "aws:bootstrap": "cdk bootstrap --force",
+    "aws:diff": "cdk diff",
+    "aws:deploy": "cdk deploy --require-approval never",
+    "lambda:deploy": "bun lambda:zip && bun aws:bootstrap && bun aws:diff && bun aws:deploy"
   },
+  "type": "module",
+  "main": "src/lambda.ts",
   "dependencies": {
     "@abraham/reflection": "^0.12.0",
     "@elysiajs/cors": "^0.7.1",
-    "@envelop/graphql-jit": "^8.0.1",
     "@whatwg-node/server-plugin-cookies": "^1.0.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
@@ -23,9 +33,12 @@
   },
   "devDependencies": {
     "@types/qrcode": "^1.5.5",
-    "bun-types": "latest"
+    "aws-cdk": "^2.106.1",
+    "aws-cdk-lib": "^2.106.1",
+    "bun-types": "latest",
+    "constructs": "^10.3.0",
+    "ts-node": "^10.9.1"
   },
-  "module": "src/index.js",
   "overrides": {
     "graphql": "16.7.1"
   }
