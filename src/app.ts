@@ -2,7 +2,6 @@ import Elysia from "elysia";
 import cors from "@elysiajs/cors";
 import { createYoga } from "graphql-yoga";
 import { buildSchema } from "type-graphql";
-import { aws } from "dynamoose";
 import { useCookies } from "@whatwg-node/server-plugin-cookies";
 
 import {
@@ -16,12 +15,6 @@ import { Container } from "./common/container";
 import { AsyncStorageService, ConfigService } from "./common/service";
 import { ApplicationConfig } from "./common/type";
 import { ConfigEntries } from "./common/constant";
-
-if (process.env.NODE_ENV === "prod") {
-  aws.ddb.set(new aws.ddb.DynamoDB({ region: process.env.region }));
-} else {
-  aws.ddb.local();
-}
 
 export async function bootstrap() {
   const configService =

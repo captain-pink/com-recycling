@@ -1,4 +1,8 @@
+import { aws } from "dynamoose";
+
 import { bootstrap } from "./app";
+
+aws.ddb.local();
 
 const app = await bootstrap();
 

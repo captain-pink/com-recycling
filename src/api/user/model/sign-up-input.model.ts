@@ -15,7 +15,7 @@ export class SignUpInput {
 
   @Field()
   @IsStrongPassword({
-    minLength: 10,
+    minLength: 8,
     minSymbols: 1,
     minNumbers: 1,
     minLowercase: 1,

@@ -33,7 +33,7 @@ export function createModel<I extends Item>(
 ): ModelType<I> {
   return model<I>(modelName, schema, {
     ...options,
-    create: true,
+    create: process.env.NODE_ENV === "prod" ? false : true,
     initialize: true,
   });
 }

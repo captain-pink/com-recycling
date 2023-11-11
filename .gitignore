@@ -51,3 +51,4 @@ source
 lambda.zip
 dist
 cdk.out
+.env

@@ -1,10 +1,20 @@
-import { App, RemovalPolicy, Size, Stack, StackProps } from "aws-cdk-lib";
+import "dotenv/config";
+
+import {
+  App,
+  CfnOutput,
+  RemovalPolicy,
+  Size,
+  Stack,
+  StackProps,
+} from "aws-cdk-lib";
 import {
   LayerVersion,
   Runtime,
   Code,
   Architecture,
   Function,
+  FunctionUrlAuthType,
 } from "aws-cdk-lib/aws-lambda";
 import { Construct } from "constructs";
 import { join } from "path";
@@ -15,6 +25,8 @@ const LAMBDA_CODE_PATH = "/lambda.zip";
 const LAMBDA_HANDLER_PATH = "source/index.fetch";
 
 enum DynamoPolicies {
+  Describe = "dynamodb:DescribeTable",
+  Create = "dynamodb:CreateTable",
   Query = "dynamodb:Query",
   Scan = "dynamodb:Scan",
   GetItem = "dynamodb:GetItem",
@@ -25,6 +37,12 @@ enum DynamoPolicies {
   BatchWriteItem = "dynamodb:BatchWriteItem",
 }
 
+const {
+  AWS_ACCOUNT = "",
+  AWS_REGION = "eu-north-1",
+  NODE_ENV = "prod",
+} = process.env;
+
 class CrmRecycling extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -32,7 +50,7 @@ class CrmRecycling extends Stack {
     const BunLayer = LayerVersion.fromLayerVersionArn(
       this,
       "bun",
-      "arn:aws:lambda:eu-west-2:889999233739:layer:bun:1"
+      `arn:aws:lambda:${AWS_REGION}:${AWS_ACCOUNT}:layer:bun:1`
     );
 
     const lambda = new Function(this, "CrmRecycling", {
@@ -40,14 +58,20 @@ class CrmRecycling extends Stack {
       handler: LAMBDA_HANDLER_PATH,
       code: Code.fromAsset(join(".", LAMBDA_CODE_PATH)),
       ephemeralStorageSize: Size.mebibytes(512),
-      memorySize: 128,
+      memorySize: 256,
       architecture: Architecture.ARM_64,
       layers: [BunLayer],
       environment: {
-        NODE_ENV: "prod",
-        REGION: "eu-west-2",
+        NODE_ENV: NODE_ENV,
+        REGION: AWS_REGION,
       },
     });
+
+    const lambdaUrl = lambda.addFunctionUrl({
+      authType: FunctionUrlAuthType.NONE,
+    });
+
+    new CfnOutput(this, "LambdaUrlOutput", { value: lambdaUrl.url });
 
     const table = this.createDynamoDbTable();
 
@@ -56,6 +80,8 @@ class CrmRecycling extends Stack {
         effect: Effect.ALLOW,
         resources: [table.tableArn],
         actions: [
+          DynamoPolicies.Describe,
+          DynamoPolicies.Create,
           DynamoPolicies.BatchGetItem,
           DynamoPolicies.BatchWriteItem,
           DynamoPolicies.DeleteItem,
@@ -74,7 +100,6 @@ class CrmRecycling extends Stack {
       tableName: "Recycling",
       partitionKey: { name: "pk", type: AttributeType.STRING },
       sortKey: { name: "sk", type: AttributeType.STRING },
-
       billingMode: BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
     });
