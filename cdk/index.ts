@@ -1,7 +1,4 @@
 import { App, RemovalPolicy, Size, Stack, StackProps } from "aws-cdk-lib";
-import * as s3 from "aws-cdk-lib/aws-s3";
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import {
   LayerVersion,
   Runtime,
@@ -70,59 +67,6 @@ class CrmRecycling extends Stack {
         ],
       })
     );
-
-    // // S3 bucket for React app
-    // const reactBucket = new s3.Bucket(this, "ReactAppBucket", {
-    //   removalPolicy: cdk.RemovalPolicy.DESTROY, // only for demo purposes, use a different policy for production
-    // });
-
-    // // CloudFront distribution for React app
-    // const cloudFrontDistribution = new cloudfront.CloudFrontWebDistribution(
-    //   this,
-    //   "CloudFrontDistribution",
-    //   {
-    //     originConfigs: [
-    //       {
-    //         s3OriginSource: {
-    //           s3BucketSource: reactBucket,
-    //         },
-    //         behaviors: [{ isDefaultBehavior: true }],
-    //       },
-    //     ],
-    //   }
-    // );
-
-    // Lambda function for backend logic
-    // const backendLambda = new lambdaNodejs.NodejsFunction(
-    //   this,
-    //   "BackendLambda",
-    //   {
-    //     entry: "lambda/my-lambda-handler.ts",
-    //     layers: [
-    //       lambda.LayerVersion.fromLayerVersionArn(
-    //         this,
-    //         "BunLayer",
-    //         "<YOUR_BUN_LAYER_ARN>"
-    //       ),
-    //     ],
-    //   }
-    // );
-
-    // API Gateway
-    // const api = new apigateway.RestApi(this, "MyApi", {
-    //   deployOptions: {
-    //     stageName: "prod",
-    //   },
-    // });
-
-    // // Integration between API Gateway and Lambda
-    // const lambdaIntegration = new apigateway.LambdaIntegration(backendLambda);
-    // api.root.addMethod("GET", lambdaIntegration);
-
-    // // Output the CloudFront distribution domain name
-    // new cdk.CfnOutput(this, "CloudFrontURL", {
-    //   value: cloudFrontDistribution.distributionDomainName,
-    // });
   }
 
   private createDynamoDbTable() {
