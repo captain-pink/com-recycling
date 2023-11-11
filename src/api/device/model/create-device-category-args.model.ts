@@ -1,6 +1,7 @@
-import { MaxLength } from "class-validator";
-import { ArgsType, Field, InputType } from "type-graphql";
+import { ArgsType, Field } from "type-graphql";
+
 import { Component } from ".";
+import { DeviceType } from "../../../db/dynamo/constant";
 
 @ArgsType()
 export class CreateDeviceCategoryArgs {
@@ -9,4 +10,7 @@ export class CreateDeviceCategoryArgs {
 
   @Field(() => [Component])
   readonly components: Array<Component>;
+
+  @Field(() => DeviceType)
+  readonly deviceType: DeviceType;
 }

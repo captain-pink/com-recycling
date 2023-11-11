@@ -6,6 +6,7 @@ import {
   createModel,
 } from "../helper";
 import { BaseItem } from "./base-item.model";
+import { DeviceType } from "../constant";
 
 const componentSchema = new Schema({
   material: {
@@ -39,6 +40,11 @@ const schema = new Schema(
       schema: [componentSchema],
       required: true,
     },
+    deviceType: {
+      type: String,
+      enum: [DeviceType.PHONE, DeviceType.TABLET, DeviceType.LAPTOP],
+      required: true,
+    },
   },
   { timestamps: true }
 );
@@ -51,6 +57,7 @@ export class ComponentItem {
 export class DeviceCategoryItem extends BaseItem {
   readonly manufacturerId: string;
   readonly category: string;
+  readonly deviceType: DeviceType;
   readonly components: Array<ComponentItem>;
 }
 

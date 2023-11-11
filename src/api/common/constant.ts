@@ -1,4 +1,5 @@
 import { registerEnumType } from "type-graphql";
+import { DeviceType } from "../../db/dynamo/constant";
 
 export enum ErrorCode {
   INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR",
@@ -24,3 +25,5 @@ export enum TimeMeasurement {
 registerEnumType(TimeMeasurement, { name: "TimeMeasurement" });
 
 export const BATCH_CHUNK_SIZE_LIMIT = 25;
+
+registerEnumType(DeviceType, { name: "DeviceType" });

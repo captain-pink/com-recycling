@@ -1,5 +1,6 @@
-import { Field, ObjectType, InputType } from "type-graphql";
+import { Field, ObjectType } from "type-graphql";
 import { Component } from ".";
+import { DeviceType } from "../../../db/dynamo/constant";
 
 @ObjectType()
 export class DeviceCategory {
@@ -8,6 +9,9 @@ export class DeviceCategory {
 
   @Field()
   readonly category: string;
+
+  @Field()
+  readonly deviceType: DeviceType;
 
   @Field(() => [Component])
   readonly components: Array<Component>;

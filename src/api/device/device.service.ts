@@ -33,7 +33,11 @@ import {
   QrService,
 } from "../../common/service";
 import { StatsItem } from "../../db/dynamo/model/stats.model";
-import { CompositekeyFilter, DBEntityType } from "../../db/dynamo/constant";
+import {
+  CompositekeyFilter,
+  DBEntityType,
+  DeviceType,
+} from "../../db/dynamo/constant";
 import { ComponentItem } from "../../db/dynamo/model/device-category.model";
 import { SystemConfig } from "../../common/type";
 import { ErrorCode } from "../common/constant";
@@ -63,7 +67,11 @@ export class DeviceService extends BaseSerivce {
     this.systemConfig = this.configService.get(ConfigEntries.SYSTEM);
   }
 
-  async createDeviceCategory(category: string, components: Array<Component>) {
+  async createDeviceCategory(
+    category: string,
+    components: Array<Component>,
+    deviceType: DeviceType
+  ) {
     const { id: manufacturerId } = this.asyncStorageService.get(
       AsyncStorageEntries.JWT_PAYLOAD
     ) as JwtPayload;
@@ -73,6 +81,7 @@ export class DeviceService extends BaseSerivce {
         manufacturerId,
         category: `${DBEntityType.CATEGORY}_${category}`,
         components: instanceToPlain(components) as Array<ComponentItem>,
+        deviceType,
       });
     });
   }
@@ -93,13 +102,17 @@ export class DeviceService extends BaseSerivce {
         )
       )
       .exec();
-    return categories.map((deviceCategory) => {
-      return {
-        manufacturerId: deviceCategory.manufacturerId,
-        category: deviceCategory.category.split("_")[1],
-        components: plainToInstance(ComponentItem, deviceCategory.components),
-      };
-    });
+
+    return categories.map(
+      ({ manufacturerId, category, components, deviceType }) => {
+        return {
+          manufacturerId: manufacturerId,
+          category: category.split("_")[1],
+          components: plainToInstance(ComponentItem, components),
+          deviceType,
+        };
+      }
+    );
   }
 
   async queryDeviceInfo(input: QueryDeviceInfoArgs) {
@@ -243,33 +256,39 @@ export class DeviceService extends BaseSerivce {
         manufacturerId,
         serialNumber,
       });
-      
+
       if (!deviceItem) {
         throw new NotFoundError();
       }
 
       if (deviceItem.isRecycled) {
-        return new ApiError(ErrorCode.INVALID_ARGUMENT, "Device is already recycled");
+        return new ApiError(
+          ErrorCode.INVALID_ARGUMENT,
+          "Device is already recycled"
+        );
       }
 
       const [recycler] = await this.userModel
         .query(
           new GetUsersCondition({
             entityType: DBEntityType.USER,
-            userId: recyclerId
+            userId: recyclerId,
           })
         )
         .exec();
 
       if (!recycler) {
-        throw new ApiError(ErrorCode.INTERNAL_SERVER_ERROR, "Recycler is not found");
+        throw new ApiError(
+          ErrorCode.INTERNAL_SERVER_ERROR,
+          "Recycler is not found"
+        );
       }
 
       await this.deviceModel.update({
         manufacturerId,
         serialNumber: `${DBEntityType.SERIAL_NUMBER}_${serialNumber}`,
         isRecycled: true,
-        recycledBy: recycler.companyName
+        recycledBy: recycler.companyName,
       });
     });
   }

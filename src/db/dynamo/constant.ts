@@ -15,3 +15,9 @@ export enum UserType {
   MANUFACTURER,
   RECYCLER,
 }
+
+export enum DeviceType {
+  PHONE = "Phone",
+  TABLET = "Tablet",
+  LAPTOP = "Laptop",
+}
