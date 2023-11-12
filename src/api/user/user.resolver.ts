@@ -1,7 +1,8 @@
-import { Arg, Args, Ctx, Mutation, Query, Resolver } from "type-graphql";
+import { Arg, Args, Authorized, Ctx, Mutation, Query, Resolver } from "type-graphql";
 import { singleton } from "tsyringe";
 
 import { UserService } from "./user.service";
+import { AuthScope } from "../../common/constant";
 import { User, LoginInput, SignUpInput, QueryUsersArgs } from "./model";
 import { BaseResponse } from "../common/model";
 import { AppContext } from "../../common/type";
@@ -34,5 +35,11 @@ export class UserResolver {
   @Query(() => [User])
   queryUsers(@Args() { userType }: QueryUsersArgs) {
     return this.userService.queryUsers(userType);
+  }
+
+  @Authorized(AuthScope.WRITE_RECYCLER)
+  @Query(() => Boolean)
+  canRecycle() {
+    return true;
   }
 }
