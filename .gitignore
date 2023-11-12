@@ -47,3 +47,8 @@ public/
 volume/
 .data/
 .dynamodb
+source
+lambda.zip
+dist
+cdk.out
+.env

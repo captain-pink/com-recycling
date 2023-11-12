@@ -5,6 +5,7 @@
     "target": "esnext",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "esModuleInterop": true,
     "moduleResolution": "Bundler",
     "moduleDetection": "force",
     "allowImportingTsExtensions": true,

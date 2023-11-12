@@ -14,6 +14,7 @@ export type AuthConfig = {
 
 export type SystemConfig = {
   readonly domain: string;
+  readonly graphiql: boolean;
 };
 
 export type MaterialsConfig = {

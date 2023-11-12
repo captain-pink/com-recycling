@@ -8,6 +8,6 @@ export class QueryDeviceInfoArgs {
   readonly manufacturerId: string;
 
   @Field()
-  @MaxLength(30)
+  @MaxLength(100)
   readonly serialNumber: string;
 }

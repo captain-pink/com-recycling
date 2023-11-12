@@ -1,57 +1,29 @@
-import Elysia from "elysia";
-import cors from "@elysiajs/cors";
-import { createYoga } from "graphql-yoga";
-import { buildSchema } from "type-graphql";
 import { aws } from "dynamoose";
-import { useCookies } from "@whatwg-node/server-plugin-cookies";
-import { useGraphQlJit } from "@envelop/graphql-jit";
+import cors from "@elysiajs/cors";
 
-import {
-  ErrorInterceptor,
-  AuthCheckerService,
-  UserResolver,
-  ElysiaYogaPlugin,
-  DeviceResolver,
-} from "./api";
+import { bootstrap } from "./app";
+import { ConfigEntries } from "./common/constant";
+import { ConfigService } from "./common/service";
+import { ApplicationConfig } from "./common/type";
 import { Container } from "./common/container";
-import { AsyncStorageService } from "./common/service";
 
 aws.ddb.local();
 
-async function bootstrap() {
-  const schema = await buildSchema({
-    resolvers: [DeviceResolver, UserResolver],
-    container: { get: Container.resolve.bind(Container) },
-    globalMiddlewares: [ErrorInterceptor],
-    authChecker: AuthCheckerService,
-    validate: true,
-  });
-
-  const yoga = createYoga({
-    schema,
-    cors: false,
-    plugins: [useCookies(), useGraphQlJit()],
-  });
-
-  return new Elysia()
-    .use(
-      cors({
-        origin: "localhost:5173",
-        credentials: true,
-        allowedHeaders: ["content-type", "accept", "origin", "user-Agent"],
-      })
-    )
-    .use(
-      ElysiaYogaPlugin({
-        yoga,
-        asyncStorageSerivce: Container.resolve(AsyncStorageService),
-      })
-    );
-}
-
 const app = await bootstrap();
 
-app.listen(3001);
+const configService =
+  Container.resolve<ConfigService<ApplicationConfig>>(ConfigService);
+const systemConfig = configService.get(ConfigEntries.SYSTEM);
+
+app
+  .use(
+    cors({
+      origin: systemConfig.domain,
+      credentials: true,
+      allowedHeaders: ["content-type", "accept", "origin", "user-Agent"],
+    })
+  )
+  .listen(3001);
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`

@@ -3,6 +3,7 @@ import { ModelType } from "dynamoose/dist/General";
 import { Item } from "dynamoose/dist/Item";
 import { ModelTableOptions } from "dynamoose/dist/Model";
 import { Schema, ValueType } from "dynamoose/dist/Schema";
+import { isProd } from "../../api";
 
 export function StringLessOrEqual(operand: number) {
   return (value: ValueType) => (value as string).length <= operand;
@@ -33,7 +34,7 @@ export function createModel<I extends Item>(
 ): ModelType<I> {
   return model<I>(modelName, schema, {
     ...options,
-    create: true,
+    create: !isProd(),
     initialize: true,
   });
 }

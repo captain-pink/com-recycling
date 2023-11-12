@@ -1,0 +1,10 @@
+{
+  "app": "bunx ts-node --esm cdk/index.ts",
+  "context": {
+    "aws-cdk:enableDiffNoFail": "true",
+    "props": {
+      "serviceName": "CrmRecycling",
+      "serviceVersion": "v1"
+    }
+  }
+}
