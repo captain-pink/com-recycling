@@ -295,6 +295,19 @@ export class DeviceService extends BaseSerivce {
         );
       }
 
+      const stats = await this.statsModel.get({
+        manufacturerId,
+        sk: DBEntityType.STATS,
+      });
+
+      await this.statsModel.update({
+        manufacturerId,
+        sk: DBEntityType.STATS,
+        total: stats.total,
+        recycled: stats.recycled + 1,
+        totalRawWeight: stats.totalRawWeight + 44.21,
+      });
+
       await this.deviceModel.update({
         manufacturerId,
         serialNumber: `${DBEntityType.SERIAL_NUMBER}_${serialNumber}`,
