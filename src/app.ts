@@ -1,5 +1,4 @@
 import Elysia from "elysia";
-import cors from "@elysiajs/cors";
 import { createYoga } from "graphql-yoga";
 import { buildSchema } from "type-graphql";
 import { useCookies } from "@whatwg-node/server-plugin-cookies";
@@ -36,18 +35,10 @@ export async function bootstrap() {
     plugins: [useCookies()],
   });
 
-  return new Elysia()
-    .use(
-      cors({
-        origin: systemConfig.domain,
-        credentials: true,
-        allowedHeaders: ["content-type", "accept", "origin", "user-Agent"],
-      })
-    )
-    .use(
-      ElysiaYogaPlugin({
-        yoga,
-        asyncStorageSerivce: Container.resolve(AsyncStorageService),
-      })
-    );
+  return new Elysia().use(
+    ElysiaYogaPlugin({
+      yoga,
+      asyncStorageSerivce: Container.resolve(AsyncStorageService),
+    })
+  );
 }

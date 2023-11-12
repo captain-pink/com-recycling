@@ -20,3 +20,7 @@ export function asBatch<T>(
 
   return chunks;
 }
+
+export function isProd() {
+  return process.env.NODE_ENV === "prod";
+}

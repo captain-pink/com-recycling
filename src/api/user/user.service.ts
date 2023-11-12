@@ -4,15 +4,20 @@ import { CookieStore } from "@whatwg-node/cookie-store";
 import { randomUUID } from "crypto";
 
 import { LoginInput, SignUpInput, User } from "./model";
-import { AuthService, JwtService } from "../../common/service";
-import { AuthScope, StoreModelEntryKey } from "../../common/constant";
+import { AuthService, ConfigService, JwtService } from "../../common/service";
+import {
+  AuthScope,
+  ConfigEntries,
+  StoreModelEntryKey,
+} from "../../common/constant";
 import { JwtPayload, ModelStore } from "../../common/model";
 import { GetUsersCondition, UserItem } from "../../db";
 import { ResponseStatus } from "../common/constant";
 import { DBEntityType, UserType } from "../../db/dynamo/constant";
 import { BaseResponse, BaseSerivce } from "../common/model";
 import { StatsItem } from "../../db/dynamo/model/stats.model";
-import { AuthenticationError } from "type-graphql";
+import { isProd } from "..";
+import { SystemConfig } from "../../common/type";
 
 @singleton()
 export class UserService extends BaseSerivce {
@@ -22,7 +27,8 @@ export class UserService extends BaseSerivce {
   constructor(
     private readonly modelStore: ModelStore,
     private readonly authService: AuthService,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
+    private readonly configSerivice: ConfigService
   ) {
     super();
 
@@ -117,7 +123,7 @@ export class UserService extends BaseSerivce {
           userType: userType,
         })
       )
-      .exec();  
+      .exec();
     return users.map((user) => {
       return {
         userId: user.userId,
@@ -136,10 +142,9 @@ export class UserService extends BaseSerivce {
       value: token,
       expires: expires * 1000,
       domain: null,
-      sameSite: "lax",
-      // secure: true,
-      // httpOnly: true,
-      // domain: "localhost",
+      sameSite: isProd() ? "none" : "lax",
+      secure: isProd(),
+      httpOnly: isProd(),
     });
   }
 }
