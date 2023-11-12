@@ -133,6 +133,7 @@ export class DeviceService extends BaseSerivce {
       manufacturerId: deviceItem.manufacturerId,
       serialNumber: deviceItem.serialNumber,
       category: deviceItem.category,
+      deviceType: category.deviceType,
       components: category.components,
       isRecycled: deviceItem.isRecycled,
       recycledBy: deviceItem.recycledBy,

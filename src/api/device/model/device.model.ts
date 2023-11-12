@@ -21,6 +21,9 @@ export class Device {
   @Field()
   readonly category: string;
 
+  @Field({ nullable: true })
+  readonly deviceType: string;
+
   @Field(() => [Component], { nullable: true })
   readonly components?: Array<Component>;
 
