@@ -142,9 +142,9 @@ export class UserService extends BaseSerivce {
       value: token,
       expires: expires * 1000,
       domain: null,
-      sameSite: isProd() ? "none" : "lax",
-      secure: isProd(),
-      httpOnly: isProd(),
+      // sameSite: isProd() ? "none" : "lax",
+      // secure: isProd(),
+      // httpOnly: isProd(),
     });
   }
 }
